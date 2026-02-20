@@ -1,0 +1,153 @@
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# Archivos de entorno y configuración sensible
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# Logs y archivos de datos
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.pid
+*.seed
+*.pid.lock
+
+# Directorios de caché
+.temp/
+.cache/
+.tmp/
+.eslintcache
+.pnpm-store/
+
+# Cobertura de pruebas
+coverage/
+.nyc_output/
+coverage.*.json
+*.lcov
+
+# Build y distribución
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Archivos de subida
+uploads/
+public/uploads/
+temp-uploads/
+
+# Archivos de certificados SSL
+*.pem
+*.p12
+*.key
+*.crt
+*.csr
+
+# Archivos de documentación generados
+docs/
+api-docs/
+apidoc/
+
+# Archivos específicos de Express.js
+views/
+!views/  # Si quieres mantener la carpeta views pero ignorar su contenido
+public/
+!public/  # Si quieres mantener la carpeta public pero ignorar su contenido
+
+# Archivos de entorno de producción
+config/production.json
+config/production.js
+config/production.yaml
+config/production.yml
+
+# Reportes
+reports/
+*.xml
+*.html
+
+# Archivos de volcado de base de datos
+dump.rdb
+dump.sql
+dump/
+
+# Archivos de sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Archivos de dependencias locales
+.pnpm/
+.pnpm-store/
+.yarn/
+yarn.lock
+package-lock.json
+package-lock.json.*
+
+# Archivos de Docker (opcional, si usas Docker)
+.dockerignore
+docker-compose.override.yml
+Dockerfile.dev
+.docker/
+
+# Directorios de pruebas
+test-reports/
+junit.xml
+mochawesome-report/
+
+# Archivos de plantillas temporales
+tmp/
+temp/
+
+# Archivos de compresión
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Archivos de respaldo
+*.backup
+*.bak
+
+# Archivos de configuración de nodemon
+nodemon.json
+!nodemon.json.example
+
+# Archivos de configuración de PM2 (si usas PM2)
+pm2.json
+pm2-*.json
+ecosystem.config.js
+!ecosystem.config.js.example
+
+# Archivos de configuración de VS Code (workspace)
+*.code-workspace
+
+# Directorios de dependencias específicas
+jspm_packages/
+bower_components/
+typings/
+vendor/
