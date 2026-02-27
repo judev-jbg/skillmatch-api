@@ -33,3 +33,23 @@ CREATE TABLE users (
   role user_role NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================
+-- STUDENT PROFILE TABLE (SMAPI-22)
+-- ============================
+CREATE TABLE student_profile (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  availability BOOLEAN DEFAULT FALSE,
+  portfolio_url VARCHAR(255)
+);
+
+-- ============================
+-- NGO PROFILE TABLE (SMAPI-22)
+-- ============================
+CREATE TABLE ngo_profile (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  organization_name VARCHAR(255) NOT NULL,
+  description TEXT,
+  area VARCHAR(100) NOT NULL,
+  verified BOOLEAN DEFAULT FALSE
+);
