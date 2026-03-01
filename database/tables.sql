@@ -155,3 +155,9 @@ CREATE TABLE certificates (
   file_url VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================
+-- INDEXES (SMAPI-32)
+-- ============================
+CREATE INDEX idx_applications_project ON applications(project_id);
+CREATE INDEX idx_applications_student ON applications(student_id);
