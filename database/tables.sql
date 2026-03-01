@@ -79,7 +79,7 @@ CREATE TABLE user_skills (
 -- ============================
 CREATE TABLE projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ngo_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ngo_id UUID NOT NULL REFERENCES ngo_profile(user_id) ON DELETE CASCADE,
   title VARCHAR(200) NOT NULL,
   description TEXT,
   objectives TEXT,
