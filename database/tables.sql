@@ -134,3 +134,24 @@ CREATE TABLE deliverables (
   comment TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================
+-- REVIEWS TABLE (SMAPI-30)
+-- ============================
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  from_user UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_user UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating DECIMAL(3,1) NOT NULL,
+  comment TEXT
+);
+
+-- ============================
+-- CERTIFICATES TABLE (SMAPI-31)
+-- ============================
+CREATE TABLE certificates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  file_url VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
