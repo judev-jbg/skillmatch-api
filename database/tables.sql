@@ -99,3 +99,38 @@ CREATE TABLE project_skills (
   required_level level_skill NOT NULL,
   PRIMARY KEY (project_id, skill_id)
 );
+
+-- ============================
+-- APPLICATIONS TABLE (SMAPI-27)
+-- ============================
+CREATE TABLE applications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES student_profile(user_id) ON DELETE CASCADE,
+  compatibility_score DECIMAL(5,2),
+  status application_status NOT NULL DEFAULT 'pending',
+  UNIQUE (project_id, student_id)
+);
+
+-- ============================
+-- ASSIGNMENTS TABLE (SMAPI-28)
+-- ============================
+CREATE TABLE assignments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES student_profile(user_id) ON DELETE CASCADE,
+  agreement_data JSON,
+  start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  end_date TIMESTAMP
+);
+
+-- ============================
+-- DELIVERABLES TABLE (SMAPI-29)
+-- ============================
+CREATE TABLE deliverables (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  file_url VARCHAR(255) NOT NULL,
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
