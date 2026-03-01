@@ -53,3 +53,14 @@ CREATE TABLE ngo_profile (
   area VARCHAR(100) NOT NULL,
   verified BOOLEAN DEFAULT FALSE
 );
+
+-- ============================
+-- SKILLS TABLE (SMAPI-23)
+-- ============================
+CREATE TABLE skills
+(
+    id       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name     VARCHAR(100) NOT NULL,
+    category VARCHAR(50)  NOT NULL
+);
+
