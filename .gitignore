@@ -105,6 +105,7 @@ $RECYCLE.BIN/
 .pnpm-store/
 .yarn/
 yarn.lock
+/.claude/
 package-lock.json
 package-lock.json.*
 
@@ -151,3 +152,6 @@ jspm_packages/
 bower_components/
 typings/
 vendor/
+
+*local.md
+*local.sql

@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ENUM TYPES
 -- ============================
 
-CREATE TYPE user_role AS ENUM ('student', 'ngo', 'admin');
+CREATE TYPE user_role AS ENUM ('student', 'ngo', 'admin', 'sa');
 
 CREATE TYPE project_status AS ENUM (
   'pending',
