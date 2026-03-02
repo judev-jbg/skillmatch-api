@@ -19,6 +19,19 @@ const UsersRepository = {
   },
 
   /**
+   * Busca un usuario por ID.
+   * @param {string} id - UUID del usuario
+   * @returns {Promise<object|null>}
+   */
+  async findById(id) {
+    const { rows } = await pool.query(
+      'SELECT * FROM users WHERE id = $1',
+      [id],
+    );
+    return rows[0] ?? null;
+  },
+
+  /**
    * Inserta un nuevo usuario en la tabla `users`.
    * @param {{ name: string, email: string, passwordHash: string, role: string }} data
    * @param {import('pg').PoolClient} client - Cliente de transacción activa

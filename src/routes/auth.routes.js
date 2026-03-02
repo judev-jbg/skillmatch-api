@@ -81,4 +81,72 @@ const router = Router();
  */
 router.post('/register', AuthController.register);
 
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Iniciar sesión
+ *     description: >
+ *       Autentica al usuario con email y contraseña.
+ *       Si las credenciales son válidas, establece una cookie HttpOnly `token` con el JWT firmado.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: ana@ong.org
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: s3cur3P@ss
+ *     responses:
+ *       200:
+ *         description: Autenticación exitosa. Cookie `token` establecida.
+ *         headers:
+ *           Set-Cookie:
+ *             description: Cookie HttpOnly con el JWT
+ *             schema:
+ *               type: string
+ *               example: token=eyJ...; HttpOnly; SameSite=Lax
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Autenticación exitosa
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Campos email o password faltantes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Credenciales inválidas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/login', AuthController.login);
+
 export default router;
