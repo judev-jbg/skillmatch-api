@@ -106,6 +106,7 @@ $RECYCLE.BIN/
 .yarn/
 yarn.lock
 /.claude/
+/memory/
 package-lock.json
 package-lock.json.*
 
