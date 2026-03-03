@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 import UsersRepository from '../repositories/users.repository.js';
 import { HttpError } from '../utils/errors.js';
@@ -35,6 +36,7 @@ const AuthService = {
     const passwordHash = await argon2.hash(password);
 
     const client = await pool.connect();
+
     try {
       await client.query('BEGIN');
 
@@ -58,6 +60,35 @@ const AuthService = {
     } finally {
       client.release();
     }
+  },
+
+  /**
+   * Autentica un usuario por email y contraseña.
+   * Devuelve el token JWT firmado y los datos públicos del usuario.
+   *
+   * @param {{ email: string, password: string }} data
+   * @returns {Promise<{ token: string, user: { id: string, name: string, email: string, role: string, created_at: Date } }>}
+   * @throws {HttpError} 401 si el email no existe o la contraseña es incorrecta
+   */
+  async login({ email, password }) {
+    const user = await UsersRepository.findByEmail(email);
+    if (!user) {
+      throw new HttpError('Credenciales inválidas', 401);
+    }
+
+    const valid = await argon2.verify(user.password_hash, password);
+    if (!valid) {
+      throw new HttpError('Credenciales inválidas', 401);
+    }
+
+    const token = jwt.sign(
+      { sub: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
+    );
+
+    const { password_hash, ...publicUser } = user;
+    return { token, user: publicUser };
   },
 };
 
