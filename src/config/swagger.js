@@ -41,6 +41,20 @@ const options = {
             created_at: { type: "string", format: "date-time" },
           },
         },
+        NgoProfile: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            role: { type: "string", example: "ngo" },
+            created_at: { type: "string", format: "date-time" },
+            organization_name: { type: "string" },
+            description: { type: "string", nullable: true },
+            area: { type: "string" },
+            verified: { type: "boolean" },
+          },
+        },
         StudentProfile: {
           type: "object",
           properties: {
