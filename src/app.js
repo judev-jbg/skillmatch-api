@@ -4,6 +4,7 @@ import { apiReference } from '@scalar/express-api-reference';
 import swaggerSpec from './config/swagger.js';
 import authRoutes from './routes/auth.routes.js';
 import studentRoutes from './routes/students.routes.js';
+import ngoRoutes from './routes/ngos.routes.js';
 
 const app = express();
 
@@ -20,5 +21,8 @@ app.use('/auth', authRoutes);
 
 /** Rutas del perfil del estudiante */
 app.use('/students', studentRoutes);
+
+/** Rutas del perfil de la ONG */
+app.use('/ngos', ngoRoutes);
 
 export default app;
