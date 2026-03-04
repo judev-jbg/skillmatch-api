@@ -41,6 +41,28 @@ const options = {
             created_at: { type: "string", format: "date-time" },
           },
         },
+        StudentProfile: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            role: { type: "string", example: "student" },
+            created_at: { type: "string", format: "date-time" },
+            availability: { type: "boolean" },
+            portfolio_url: { type: "string", format: "uri", nullable: true },
+            skills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skill_id: { type: "string", format: "uuid" },
+                  level: { type: "string", enum: ["basic", "intermediate", "advanced"] },
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
