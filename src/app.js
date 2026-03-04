@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import { apiReference } from '@scalar/express-api-reference';
 import swaggerSpec from './config/swagger.js';
 import authRoutes from './routes/auth.routes.js';
+import studentRoutes from './routes/students.routes.js';
 
 const app = express();
 
@@ -16,5 +17,8 @@ if (process.env.DOCS_ENABLED !== 'false') {
 
 /** Rutas de autenticación */
 app.use('/auth', authRoutes);
+
+/** Rutas del perfil del estudiante */
+app.use('/students', studentRoutes);
 
 export default app;
