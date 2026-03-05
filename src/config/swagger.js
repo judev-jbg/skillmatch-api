@@ -55,6 +55,31 @@ const options = {
             verified: { type: "boolean" },
           },
         },
+        Project: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            ngo_id: { type: "string", format: "uuid" },
+            title: { type: "string" },
+            description: { type: "string", nullable: true },
+            objectives: { type: "string", nullable: true },
+            estimated_hours: { type: "integer", nullable: true },
+            deadline: { type: "string", format: "date", nullable: true },
+            modality: { type: "string", nullable: true },
+            status: { type: "string", enum: ["pending", "assigned", "in_progress", "in_review", "rejected", "approved", "finished"] },
+            created_at: { type: "string", format: "date-time" },
+            skills: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  skill_id: { type: "string", format: "uuid" },
+                  required_level: { type: "string", enum: ["basic", "intermediate", "advanced"] },
+                },
+              },
+            },
+          },
+        },
         StudentProfile: {
           type: "object",
           properties: {

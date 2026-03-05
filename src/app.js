@@ -5,6 +5,7 @@ import swaggerSpec from './config/swagger.js';
 import authRoutes from './routes/auth.routes.js';
 import studentRoutes from './routes/students.routes.js';
 import ngoRoutes from './routes/ngos.routes.js';
+import projectRoutes from './routes/projects.routes.js';
 
 const app = express();
 
@@ -24,5 +25,8 @@ app.use('/students', studentRoutes);
 
 /** Rutas del perfil de la ONG */
 app.use('/ngos', ngoRoutes);
+
+/** Rutas de proyectos */
+app.use('/projects', projectRoutes);
 
 export default app;
