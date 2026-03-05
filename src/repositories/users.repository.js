@@ -74,6 +74,25 @@ const UsersRepository = {
       [userId, organizationName, area],
     );
   },
+
+  /**
+   * Actualiza name y/o email del usuario.
+   * @param {{ userId: string, name?: string, email?: string }} data
+   * @param {import('pg').PoolClient} client - Cliente de transacción activa
+   * @returns {Promise<object>} Usuario actualizado
+   */
+  async update({ userId, name, email }, client) {
+    const { rows } = await client.query(
+      `UPDATE users
+       SET
+         name  = COALESCE($2, name),
+         email = COALESCE($3, email)
+       WHERE id = $1
+       RETURNING id, name, email, role, created_at`,
+      [userId, name ?? null, email ?? null],
+    );
+    return rows[0];
+  },
 };
 
 export default UsersRepository;
