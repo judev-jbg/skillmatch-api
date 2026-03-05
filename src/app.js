@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes.js';
 import studentRoutes from './routes/students.routes.js';
 import ngoRoutes from './routes/ngos.routes.js';
 import projectRoutes from './routes/projects.routes.js';
+import applicationRoutes from './routes/applications.routes.js';
 
 const app = express();
 
@@ -28,5 +29,8 @@ app.use('/ngos', ngoRoutes);
 
 /** Rutas de proyectos */
 app.use('/projects', projectRoutes);
+
+/** Rutas de aplicaciones */
+app.use('/applications', applicationRoutes);
 
 export default app;

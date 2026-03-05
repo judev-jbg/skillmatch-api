@@ -80,6 +80,18 @@ const options = {
             },
           },
         },
+        Application: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            project_id: { type: "string", format: "uuid" },
+            student_id: { type: "string", format: "uuid" },
+            compatibility_score: { type: "number", nullable: true },
+            status: { type: "string", enum: ["pending", "approved", "rejected"] },
+            student_name: { type: "string" },
+            student_email: { type: "string", format: "email" },
+          },
+        },
         StudentProfile: {
           type: "object",
           properties: {
