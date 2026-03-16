@@ -159,4 +159,53 @@ describe('ProjectsService', () => {
       expect(result).toEqual(updated);
     });
   });
+
+  // ── updateSkills ──────────────────────────────────────────────────────────
+
+  describe('updateSkills', () => {
+    const skills = [{ skill_id: 'sk-1', required_level: 'basic' }];
+
+    it('lanza HttpError 400 si skills no es un array', async () => {
+      await expect(ProjectsService.updateSkills('proj-1', 'ngo-1', 'bad')).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 404 si el proyecto no existe', async () => {
+      ProjectsRepository.findById.mockResolvedValue(null);
+      await expect(
+        ProjectsService.updateSkills('bad-id', 'ngo-1', skills),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 403 si la ONG no es propietaria', async () => {
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, ngo_id: 'otra-ngo' });
+      await expect(
+        ProjectsService.updateSkills('proj-1', 'ngo-1', skills),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('reemplaza skills y retorna el proyecto actualizado', async () => {
+      const updated = { ...FAKE_PROJECT, skills };
+      ProjectsRepository.findById
+        .mockResolvedValueOnce(FAKE_PROJECT)
+        .mockResolvedValueOnce(updated);
+      ProjectsRepository.upsertSkills.mockResolvedValue();
+
+      const result = await ProjectsService.updateSkills('proj-1', 'ngo-1', skills);
+
+      expect(ProjectsRepository.upsertSkills).toHaveBeenCalledWith('proj-1', skills, fakeClient);
+      expect(result).toEqual(updated);
+    });
+
+    it('hace ROLLBACK si falla upsertSkills', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      ProjectsRepository.upsertSkills.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        ProjectsService.updateSkills('proj-1', 'ngo-1', skills),
+      ).rejects.toThrow('DB error');
+
+      expect(fakeClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(fakeClient.release).toHaveBeenCalled();
+    });
+  });
 });

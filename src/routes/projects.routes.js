@@ -233,4 +233,74 @@ router.get('/:id', verifyToken, ProjectsController.getById);
  */
 router.put('/:id', verifyToken, requireRole('ngo'), ProjectsController.update);
 
+/**
+ * @openapi
+ * /projects/{id}/skills:
+ *   put:
+ *     tags:
+ *       - Projects
+ *     summary: Reemplazar skills de un proyecto
+ *     description: Solo accesible para la ONG propietaria del proyecto.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [skill_id, required_level]
+ *                   properties:
+ *                     skill_id:
+ *                       type: string
+ *                       format: uuid
+ *                     required_level:
+ *                       type: string
+ *                       enum: [basic, intermediate, advanced]
+ *     responses:
+ *       200:
+ *         description: Proyecto actualizado con skills
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Skills con formato inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No eres propietario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Proyecto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/skills', verifyToken, requireRole('ngo'), ProjectsController.updateSkills);
+
 export default router;

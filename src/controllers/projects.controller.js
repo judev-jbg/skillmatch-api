@@ -102,6 +102,27 @@ const ProjectsController = {
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   },
+
+  /**
+   * PUT /projects/:id/skills
+   * Reemplaza las skills requeridas de un proyecto.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async updateSkills(req, res) {
+    const { skills } = req.body;
+    try {
+      const project = await ProjectsService.updateSkills(req.params.id, req.user.id, skills);
+      return res.status(200).json(project);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[ProjectsController.updateSkills]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
 };
 
 export default ProjectsController;
