@@ -134,4 +134,38 @@ describe('ProjectsController', () => {
       expect(ProjectsService.update).toHaveBeenCalledWith('proj-1', 'ngo-1', expect.any(Object));
     });
   });
+
+  // ── updateSkills ─────────────────────────────────────────────────────────────────
+  describe('updateSkills', () => {
+    const skills = [{ skill_id: 'sk-1', required_level: 'basic' }];
+    it('responde 200 con el proyecto actualizado', async () => {
+      const updated = { ...FAKE_PROJECT, skills };
+      ProjectsService.updateSkills.mockResolvedValue(updated);
+      const res = mockRes();
+      await ProjectsController.updateSkills(mockReq({ params: { id: 'proj-1' }, body: { skills }}), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it('responde 403 si no es propietario', async () => {
+      ProjectsService.updateSkills.mockRejectedValue(new HttpError('no tienes permiso', 403));
+      const res = mockRes();
+      await ProjectsController.updateSkills(mockReq({ params: { id: 'proj-1' }, body: { skills } }), res);
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      ProjectsService.updateSkills.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await ProjectsController.updateSkills(mockReq({ params: { id: 'proj-1' }, body: { skills } }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('delega projectId y ngoId correctamente', async () => {
+      ProjectsService.updateSkills.mockResolvedValue(FAKE_PROJECT);
+      const res = mockRes();
+      await ProjectsController.updateSkills(mockReq({ params: { id: 'proj-1' }, body: { skills } }), res);
+      expect(ProjectsService.updateSkills).toHaveBeenCalledWith('proj-1', 'ngo-1', skills);
+    });
+  });
 });
