@@ -131,6 +131,44 @@ const ProjectsService = {
 
     return ProjectsRepository.findById(id);
   },
+
+  /**
+   * Reemplaza las skills requeridas de un proyecto.
+   * Solo la ONG propietaria puede modificarlas.
+   *
+   * @param {string} id
+   * @param {string} ngoId - UUID del usuario ONG autenticado
+   * @param {{ skill_id: string, required_level: string }[]} skills
+   * @returns {Promise<object>} Proyecto actualizado con skills
+   * @throws {HttpError} 404 si no existe
+   * @throws {HttpError} 403 si la ONG no es propietaria
+   * @throws {HttpError} 400 si las skills tienen formato inválido
+   */
+  async updateSkills(id, ngoId, skills) {
+    validateSkills(skills);
+
+    const existing = await ProjectsRepository.findById(id);
+    if (!existing) {
+      throw new HttpError('Proyecto no encontrado', 404);
+    }
+    if (existing.ngo_id !== ngoId) {
+      throw new HttpError('No tienes permiso para editar este proyecto', 403);
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await ProjectsRepository.upsertSkills(id, skills, client);
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    return ProjectsRepository.findById(id);
+  },
 };
 
 export default ProjectsService;
