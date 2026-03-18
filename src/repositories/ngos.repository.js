@@ -48,6 +48,18 @@ const NgoRepository = {
       [userId, organizationName ?? null, description ?? null, area ?? null],
     );
   },
+  /**
+   * Marca una ONG como verificada.
+   * @param {string} userId
+   * @returns {Promise<object|null>} Perfil actualizado o null si no existe
+   */
+  async verify(userId) {
+    const { rows } = await pool.query(
+      `UPDATE ngo_profile SET verified = TRUE WHERE user_id = $1 RETURNING *`,
+      [userId],
+    );
+    return rows[0] ?? null;
+  },
 };
 
 export default NgoRepository;
