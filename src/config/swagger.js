@@ -92,6 +92,14 @@ const options = {
             student_email: { type: "string", format: "email" },
           },
         },
+        Skill: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" },
+            category: { type: "string", enum: ["Desarrollo", "Diseno", "CMS", "Marketing"] },
+          },
+        },
         StudentProfile: {
           type: "object",
           properties: {
