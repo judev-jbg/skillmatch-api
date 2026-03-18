@@ -58,6 +58,22 @@ const NgoService = {
 
     return NgoRepository.findByUserId(userId);
   },
+  /**
+   * Verifica una ONG (solo admin).
+   *
+   * @param {string} userId - UUID del usuario ONG a verificar
+   * @returns {Promise<object>} Perfil de la ONG verificada
+   * @throws {HttpError} 404 si no existe el perfil
+   */
+  async verify(userId) {
+    const existing = await NgoRepository.findByUserId(userId);
+    if (!existing) {
+      throw new HttpError('Perfil de ONG no encontrado', 404);
+    }
+
+    await NgoRepository.verify(userId);
+    return NgoRepository.findByUserId(userId);
+  },
 };
 
 export default NgoService;

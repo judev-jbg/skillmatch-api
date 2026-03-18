@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import SkillsController from '../controllers/skills.controller.js';
+import AdminController from '../controllers/admin.controller.js';
 import { verifyToken, requireRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -162,5 +163,50 @@ router.put('/skills/:id', verifyToken, requireRole('admin'), SkillsController.up
  *               $ref: '#/components/schemas/Error'
  */
 router.delete('/skills/:id', verifyToken, requireRole('admin'), SkillsController.remove);
+
+/**
+ * @openapi
+ * /admin/verify-ngo/{user_id}:
+ *   put:
+ *     tags:
+ *       - Admin - NGOs
+ *     summary: Verificar una ONG
+ *     description: Marca una ONG como verificada. Solo accesible para administradores.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: ONG verificada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NgoProfile'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acceso denegado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: ONG no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/verify-ngo/:user_id', verifyToken, requireRole('admin'), AdminController.verifyNgo);
 
 export default router;

@@ -97,4 +97,26 @@ describe('NgoService', () => {
       expect(result.description).toBe('nueva desc');
     });
   });
+
+  // ── verify ──────────────────────────────────────────────────────────────────
+
+  describe('verify', () => {
+    it('lanza HttpError 404 si la ONG no existe', async () => {
+      NgoRepository.findByUserId.mockResolvedValue(null);
+      await expect(NgoService.verify('bad-id')).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('verifica la ONG y retorna el perfil actualizado', async () => {
+      const verified = { ...FAKE_PROFILE, verified: true };
+      NgoRepository.findByUserId
+        .mockResolvedValueOnce(FAKE_PROFILE)
+        .mockResolvedValueOnce(verified);
+      NgoRepository.verify.mockResolvedValue();
+
+      const result = await NgoService.verify('uuid-1');
+
+      expect(NgoRepository.verify).toHaveBeenCalledWith('uuid-1');
+      expect(result.verified).toBe(true);
+    });
+  });
 });
