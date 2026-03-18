@@ -8,6 +8,7 @@ import studentRoutes from './routes/students.routes.js';
 import ngoRoutes from './routes/ngos.routes.js';
 import projectRoutes from './routes/projects.routes.js';
 import applicationRoutes from './routes/applications.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -36,5 +37,8 @@ app.use('/projects', projectRoutes);
 
 /** Rutas de aplicaciones */
 app.use('/applications', applicationRoutes);
+
+/** Rutas de administración */
+app.use('/admin', adminRoutes);
 
 export default app;
