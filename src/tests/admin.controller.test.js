@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AdminController from '../controllers/admin.controller.js';
-import NgoService from '../services/ngos.service.js';
+import NgosService from '../services/ngos.service.js';
 import { HttpError } from '../utils/errors.js';
 
 vi.mock('../services/ngos.service.js');
@@ -31,7 +31,7 @@ describe('AdminController', () => {
 
   describe('verifyNgo', () => {
     it('responde 200 con el perfil verificado', async () => {
-      NgoService.verify.mockResolvedValue(FAKE_PROFILE);
+      NgosService.verify.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
       await AdminController.verifyNgo(mockReq({ params: { user_id: 'ngo-1' } }), res);
       expect(res.status).toHaveBeenCalledWith(200);
@@ -39,24 +39,24 @@ describe('AdminController', () => {
     });
 
     it('responde 404 si la ONG no existe', async () => {
-      NgoService.verify.mockRejectedValue(new HttpError('no encontrada', 404));
+      NgosService.verify.mockRejectedValue(new HttpError('no encontrada', 404));
       const res = mockRes();
       await AdminController.verifyNgo(mockReq({ params: { user_id: 'bad' } }), res);
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
     it('responde 500 ante error inesperado', async () => {
-      NgoService.verify.mockRejectedValue(new Error('db fail'));
+      NgosService.verify.mockRejectedValue(new Error('db fail'));
       const res = mockRes();
       await AdminController.verifyNgo(mockReq({ params: { user_id: 'ngo-1' } }), res);
       expect(res.status).toHaveBeenCalledWith(500);
     });
 
     it('delega user_id correctamente', async () => {
-      NgoService.verify.mockResolvedValue(FAKE_PROFILE);
+      NgosService.verify.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
       await AdminController.verifyNgo(mockReq({ params: { user_id: 'ngo-1' } }), res);
-      expect(NgoService.verify).toHaveBeenCalledWith('ngo-1');
+      expect(NgosService.verify).toHaveBeenCalledWith('ngo-1');
     });
   });
 });

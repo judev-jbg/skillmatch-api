@@ -15,7 +15,7 @@ const ApplicationsController = {
   async create(req, res) {
     const { project_id } = req.body;
     try {
-      const application = await ApplicationsService.create(req.user.id, { project_id });
+      const application = await ApplicationsService.create(req.user.id, { projectId: project_id });
       return res.status(201).json(application);
     } catch (err) {
       if (err instanceof HttpError) {

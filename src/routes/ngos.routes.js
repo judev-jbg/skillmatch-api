@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import NgoController from '../controllers/ngos.controller.js';
+import NgosController from '../controllers/ngos.controller.js';
 import { verifyToken, requireRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -41,7 +41,7 @@ router.use(verifyToken, requireRole('ngo'));
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/me', NgoController.getMe);
+router.get('/me', NgosController.getMe);
 
 /**
  * @openapi
@@ -94,6 +94,6 @@ router.get('/me', NgoController.getMe);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/me', NgoController.updateMe);
+router.put('/me', NgosController.updateMe);
 
 export default router;

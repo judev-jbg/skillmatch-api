@@ -101,7 +101,7 @@ describe('ProjectsService', () => {
 
     it('pasa los filtros al repositorio', async () => {
       ProjectsRepository.findAll.mockResolvedValue([]);
-      await ProjectsService.getAll({ status: 'pending', skill_id: 'sk-1' });
+      await ProjectsService.getAll({ status: 'pending', skillId: 'sk-1' });
       expect(ProjectsRepository.findAll).toHaveBeenCalledWith({ status: 'pending', skillId: 'sk-1' });
     });
   });

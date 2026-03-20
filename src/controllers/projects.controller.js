@@ -44,7 +44,7 @@ const ProjectsController = {
   async getAll(req, res) {
     const { status, skill_id } = req.query;
     try {
-      const projects = await ProjectsService.getAll({ status, skill_id });
+      const projects = await ProjectsService.getAll({ status, skillId: skill_id });
       return res.status(200).json(projects);
     } catch (err) {
       if (err instanceof HttpError) {

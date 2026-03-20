@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import NgoService from '../services/ngos.service.js';
-import NgoRepository from '../repositories/ngos.repository.js';
+import NgosService from '../services/ngos.service.js';
+import NgosRepository from '../repositories/ngos.repository.js';
 import pool from '../config/db.js';
 
 vi.mock('../repositories/ngos.repository.js');
@@ -20,7 +20,7 @@ const FAKE_PROFILE = {
   verified: false,
 };
 
-describe('NgoService', () => {
+describe('NgosService', () => {
   let fakeClient;
 
   beforeEach(() => {
@@ -33,14 +33,14 @@ describe('NgoService', () => {
 
   describe('getProfile', () => {
     it('retorna el perfil si existe', async () => {
-      NgoRepository.findByUserId.mockResolvedValue(FAKE_PROFILE);
-      const result = await NgoService.getProfile('uuid-1');
+      NgosRepository.findByUserId.mockResolvedValue(FAKE_PROFILE);
+      const result = await NgosService.getProfile('uuid-1');
       expect(result).toEqual(FAKE_PROFILE);
     });
 
     it('lanza HttpError 404 si el perfil no existe', async () => {
-      NgoRepository.findByUserId.mockResolvedValue(null);
-      await expect(NgoService.getProfile('uuid-x')).rejects.toMatchObject({ statusCode: 404 });
+      NgosRepository.findByUserId.mockResolvedValue(null);
+      await expect(NgosService.getProfile('uuid-x')).rejects.toMatchObject({ statusCode: 404 });
     });
   });
 
@@ -48,26 +48,26 @@ describe('NgoService', () => {
 
   describe('updateProfile', () => {
     it('lanza HttpError 400 si no se provee ningún campo', async () => {
-      await expect(NgoService.updateProfile('uuid-1', {})).rejects.toMatchObject({ statusCode: 400 });
+      await expect(NgosService.updateProfile('uuid-1', {})).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('lanza HttpError 404 si el perfil no existe', async () => {
-      NgoRepository.findByUserId.mockResolvedValue(null);
+      NgosRepository.findByUserId.mockResolvedValue(null);
       await expect(
-        NgoService.updateProfile('uuid-x', { area: 'Salud' }),
+        NgosService.updateProfile('uuid-x', { area: 'Salud' }),
       ).rejects.toMatchObject({ statusCode: 404 });
     });
 
-    it('llama a NgoRepository.update con los campos correctos', async () => {
+    it('llama a NgosRepository.update con los campos correctos', async () => {
       const updated = { ...FAKE_PROFILE, area: 'Salud' };
-      NgoRepository.findByUserId
+      NgosRepository.findByUserId
         .mockResolvedValueOnce(FAKE_PROFILE)
         .mockResolvedValueOnce(updated);
-      NgoRepository.update.mockResolvedValue();
+      NgosRepository.update.mockResolvedValue();
 
-      const result = await NgoService.updateProfile('uuid-1', { area: 'Salud' });
+      const result = await NgosService.updateProfile('uuid-1', { area: 'Salud' });
 
-      expect(NgoRepository.update).toHaveBeenCalledWith(
+      expect(NgosRepository.update).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'uuid-1', area: 'Salud' }),
         fakeClient,
       );
@@ -75,11 +75,11 @@ describe('NgoService', () => {
     });
 
     it('hace ROLLBACK y relanza si falla el update', async () => {
-      NgoRepository.findByUserId.mockResolvedValue(FAKE_PROFILE);
-      NgoRepository.update.mockRejectedValue(new Error('DB error'));
+      NgosRepository.findByUserId.mockResolvedValue(FAKE_PROFILE);
+      NgosRepository.update.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        NgoService.updateProfile('uuid-1', { description: 'nueva desc' }),
+        NgosService.updateProfile('uuid-1', { description: 'nueva desc' }),
       ).rejects.toThrow('DB error');
 
       expect(fakeClient.query).toHaveBeenCalledWith('ROLLBACK');
@@ -88,12 +88,12 @@ describe('NgoService', () => {
 
     it('permite actualizar solo description', async () => {
       const updated = { ...FAKE_PROFILE, description: 'nueva desc' };
-      NgoRepository.findByUserId
+      NgosRepository.findByUserId
         .mockResolvedValueOnce(FAKE_PROFILE)
         .mockResolvedValueOnce(updated);
-      NgoRepository.update.mockResolvedValue();
+      NgosRepository.update.mockResolvedValue();
 
-      const result = await NgoService.updateProfile('uuid-1', { description: 'nueva desc' });
+      const result = await NgosService.updateProfile('uuid-1', { description: 'nueva desc' });
       expect(result.description).toBe('nueva desc');
     });
   });
@@ -102,20 +102,20 @@ describe('NgoService', () => {
 
   describe('verify', () => {
     it('lanza HttpError 404 si la ONG no existe', async () => {
-      NgoRepository.findByUserId.mockResolvedValue(null);
-      await expect(NgoService.verify('bad-id')).rejects.toMatchObject({ statusCode: 404 });
+      NgosRepository.findByUserId.mockResolvedValue(null);
+      await expect(NgosService.verify('bad-id')).rejects.toMatchObject({ statusCode: 404 });
     });
 
     it('verifica la ONG y retorna el perfil actualizado', async () => {
       const verified = { ...FAKE_PROFILE, verified: true };
-      NgoRepository.findByUserId
+      NgosRepository.findByUserId
         .mockResolvedValueOnce(FAKE_PROFILE)
         .mockResolvedValueOnce(verified);
-      NgoRepository.verify.mockResolvedValue();
+      NgosRepository.verify.mockResolvedValue();
 
-      const result = await NgoService.verify('uuid-1');
+      const result = await NgosService.verify('uuid-1');
 
-      expect(NgoRepository.verify).toHaveBeenCalledWith('uuid-1');
+      expect(NgosRepository.verify).toHaveBeenCalledWith('uuid-1');
       expect(result.verified).toBe(true);
     });
   });
