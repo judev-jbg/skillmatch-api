@@ -3,7 +3,7 @@ import pool from '../config/db.js';
 /**
  * Repositorio de acceso a datos para `student_profile` y `user_skills`.
  */
-const StudentRepository = {
+const StudentsRepository = {
   /**
    * Devuelve el perfil completo del estudiante con sus habilidades.
    * @param {string} userId - UUID del usuario
@@ -79,4 +79,4 @@ const StudentRepository = {
   },
 };
 
-export default StudentRepository;
+export default StudentsRepository;
