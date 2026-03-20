@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ApplicationsService from '../services/applications.service.js';
 import ApplicationsRepository from '../repositories/applications.repository.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
+import StudentsRepository from '../repositories/students.repository.js';
 import pool from '../config/db.js';
 
 vi.mock('../repositories/applications.repository.js');
 vi.mock('../repositories/projects.repository.js');
+vi.mock('../repositories/students.repository.js');
 vi.mock('../config/db.js', () => ({
   default: { connect: vi.fn() },
 }));
@@ -19,11 +21,17 @@ const FAKE_PROJECT = {
   skills: [],
 };
 
+const FAKE_STUDENT = {
+  id: 'student-1',
+  name: 'Laura',
+  skills: [{ skill_id: 'sk-1', level: 'intermediate' }],
+};
+
 const FAKE_APPLICATION = {
   id: 'app-1',
   project_id: 'proj-1',
   student_id: 'student-1',
-  compatibility_score: null,
+  compatibility_score: 100,
   status: 'pending',
 };
 
@@ -52,21 +60,23 @@ describe('ApplicationsService', () => {
 
     it('lanza HttpError 409 si el estudiante ya aplicó', async () => {
       ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      StudentsRepository.findByUserId.mockResolvedValue(FAKE_STUDENT);
       ApplicationsRepository.findByProjectAndStudent.mockResolvedValue(FAKE_APPLICATION);
       await expect(
         ApplicationsService.create('student-1', { project_id: 'proj-1' }),
       ).rejects.toMatchObject({ statusCode: 409 });
     });
 
-    it('crea la aplicación y retorna el resultado', async () => {
+    it('crea la aplicación con score y retorna el resultado', async () => {
       ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      StudentsRepository.findByUserId.mockResolvedValue(FAKE_STUDENT);
       ApplicationsRepository.findByProjectAndStudent.mockResolvedValue(null);
       ApplicationsRepository.create.mockResolvedValue(FAKE_APPLICATION);
 
       const result = await ApplicationsService.create('student-1', { project_id: 'proj-1' });
 
       expect(ApplicationsRepository.create).toHaveBeenCalledWith(
-        { projectId: 'proj-1', studentId: 'student-1' },
+        expect.objectContaining({ projectId: 'proj-1', studentId: 'student-1', compatibilityScore: expect.any(Number) }),
         fakeClient,
       );
       expect(result).toEqual(FAKE_APPLICATION);
@@ -74,6 +84,7 @@ describe('ApplicationsService', () => {
 
     it('hace ROLLBACK si falla el insert', async () => {
       ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      StudentsRepository.findByUserId.mockResolvedValue(FAKE_STUDENT);
       ApplicationsRepository.findByProjectAndStudent.mockResolvedValue(null);
       ApplicationsRepository.create.mockRejectedValue(new Error('DB error'));
 
