@@ -66,15 +66,15 @@ const ProjectsService = {
   /**
    * Devuelve todos los proyectos con filtros opcionales.
    *
-   * @param {{ status?: string, skill_id?: string }} query
+   * @param {{ status?: string, skillId?: string }} query
    * @returns {Promise<object[]>}
    * @throws {HttpError} 400 si el status no es válido
    */
-  async getAll({ status, skill_id } = {}) {
+  async getAll({ status, skillId } = {}) {
     if (status && !VALID_STATUSES.includes(status)) {
       throw new HttpError(`Status inválido. Permitidos: ${VALID_STATUSES.join(', ')}`, 400);
     }
-    return ProjectsRepository.findAll({ status, skillId: skill_id });
+    return ProjectsRepository.findAll({ status, skillId });
   },
 
   /**

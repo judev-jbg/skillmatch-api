@@ -54,7 +54,7 @@ describe('ApplicationsService', () => {
     it('lanza HttpError 404 si el proyecto no existe', async () => {
       ProjectsRepository.findById.mockResolvedValue(null);
       await expect(
-        ApplicationsService.create('student-1', { project_id: 'bad-id' }),
+        ApplicationsService.create('student-1', { projectId: 'bad-id' }),
       ).rejects.toMatchObject({ statusCode: 404 });
     });
 
@@ -63,7 +63,7 @@ describe('ApplicationsService', () => {
       StudentsRepository.findByUserId.mockResolvedValue(FAKE_STUDENT);
       ApplicationsRepository.findByProjectAndStudent.mockResolvedValue(FAKE_APPLICATION);
       await expect(
-        ApplicationsService.create('student-1', { project_id: 'proj-1' }),
+        ApplicationsService.create('student-1', { projectId: 'proj-1' }),
       ).rejects.toMatchObject({ statusCode: 409 });
     });
 
@@ -73,7 +73,7 @@ describe('ApplicationsService', () => {
       ApplicationsRepository.findByProjectAndStudent.mockResolvedValue(null);
       ApplicationsRepository.create.mockResolvedValue(FAKE_APPLICATION);
 
-      const result = await ApplicationsService.create('student-1', { project_id: 'proj-1' });
+      const result = await ApplicationsService.create('student-1', { projectId: 'proj-1' });
 
       expect(ApplicationsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ projectId: 'proj-1', studentId: 'student-1', compatibilityScore: expect.any(Number) }),
@@ -89,7 +89,7 @@ describe('ApplicationsService', () => {
       ApplicationsRepository.create.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        ApplicationsService.create('student-1', { project_id: 'proj-1' }),
+        ApplicationsService.create('student-1', { projectId: 'proj-1' }),
       ).rejects.toThrow('DB error');
 
       expect(fakeClient.query).toHaveBeenCalledWith('ROLLBACK');

@@ -16,18 +16,18 @@ const ApplicationsService = {
    * Valida que el proyecto exista y que el estudiante no haya aplicado antes.
    *
    * @param {string} studentId - UUID del estudiante autenticado
-   * @param {{ project_id: string }} data
+   * @param {{ projectId: string }} data
    * @returns {Promise<object>} Aplicación creada
-   * @throws {HttpError} 400 si falta project_id
+   * @throws {HttpError} 400 si falta projectId
    * @throws {HttpError} 404 si el proyecto no existe
    * @throws {HttpError} 409 si ya existe una aplicación
    */
-  async create(studentId, { project_id }) {
-    if (!project_id) {
+  async create(studentId, { projectId }) {
+    if (!projectId) {
       throw new HttpError('El campo project_id es requerido', 400);
     }
 
-    const project = await ProjectsRepository.findById(project_id);
+    const project = await ProjectsRepository.findById(projectId);
     if (!project) {
       throw new HttpError('Proyecto no encontrado', 404);
     }
@@ -37,17 +37,17 @@ const ApplicationsService = {
       throw new HttpError('Estudiante no encontrado', 404);
     }
 
-    const existing = await ApplicationsRepository.findByProjectAndStudent(project_id, studentId);
+    const existing = await ApplicationsRepository.findByProjectAndStudent(projectId, studentId);
     if (existing) {
       throw new HttpError('Ya has aplicado a este proyecto', 409);
     }
 
-    const compatibilityScore = calculateScore(student.skills, project.skills)
+    const compatibilityScore = calculateScore(student.skills, project.skills);
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const application = await ApplicationsRepository.create({ projectId: project_id, studentId, compatibilityScore }, client);
+      const application = await ApplicationsRepository.create({ projectId, studentId, compatibilityScore }, client);
       await client.query('COMMIT');
       return application;
     } catch (err) {

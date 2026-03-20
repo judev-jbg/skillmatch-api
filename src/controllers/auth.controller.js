@@ -2,6 +2,20 @@ import AuthService from '../services/auth.service.js';
 import { HttpError } from '../utils/errors.js';
 
 /**
+ * Convierte una duración tipo JWT (ej. '7d', '24h') a milisegundos.
+ * @param {string} duration
+ * @returns {number}
+ */
+function parseDuration(duration) {
+  const match = duration.match(/^(\d+)([dhms])$/);
+  if (!match) return 7 * 24 * 60 * 60 * 1000;
+  const value = Number(match[1]);
+  const unit = match[2];
+  const multipliers = { d: 86400000, h: 3600000, m: 60000, s: 1000 };
+  return value * multipliers[unit];
+}
+
+/**
  * Controlador de autenticación.
  * Delega la lógica de negocio a AuthService y gestiona la respuesta HTTP.
  */
@@ -65,7 +79,7 @@ const AuthController = {
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en ms
+        maxAge: parseDuration(process.env.JWT_EXPIRES_IN ?? '7d'),
       });
 
       return res.status(200).json({ message: 'Autenticación exitosa', user });

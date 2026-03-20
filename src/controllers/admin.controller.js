@@ -1,4 +1,4 @@
-import NgoService from '../services/ngos.service.js';
+import NgosService from '../services/ngos.service.js';
 import { HttpError } from '../utils/errors.js';
 
 /**
@@ -14,7 +14,7 @@ const AdminController = {
    */
   async verifyNgo(req, res) {
     try {
-      const profile = await NgoService.verify(req.params.user_id);
+      const profile = await NgosService.verify(req.params.user_id);
       return res.status(200).json(profile);
     } catch (err) {
       if (err instanceof HttpError) {

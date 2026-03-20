@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import StudentController from '../controllers/students.controller.js';
+import StudentsController from '../controllers/students.controller.js';
 import { verifyToken, requireRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -41,7 +41,7 @@ router.use(verifyToken, requireRole('student'));
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/me', StudentController.getMe);
+router.get('/me', StudentsController.getMe);
 
 /**
  * @openapi
@@ -92,7 +92,7 @@ router.get('/me', StudentController.getMe);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/me', StudentController.updateMe);
+router.put('/me', StudentsController.updateMe);
 
 /**
  * @openapi
@@ -152,6 +152,6 @@ router.put('/me', StudentController.updateMe);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/me/skills', StudentController.updateSkills);
+router.put('/me/skills', StudentsController.updateSkills);
 
 export default router;

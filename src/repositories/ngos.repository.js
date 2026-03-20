@@ -3,7 +3,7 @@ import pool from '../config/db.js';
 /**
  * Repositorio de acceso a datos para `ngo_profile`.
  */
-const NgoRepository = {
+const NgosRepository = {
   /**
    * Devuelve el perfil completo de la ONG unido a `users`.
    * @param {string} userId - UUID del usuario
@@ -62,4 +62,4 @@ const NgoRepository = {
   },
 };
 
-export default NgoRepository;
+export default NgosRepository;

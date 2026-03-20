@@ -1,11 +1,11 @@
 import pool from '../config/db.js';
-import StudentRepository from '../repositories/students.repository.js';
+import StudentsRepository from '../repositories/students.repository.js';
 import { HttpError } from '../utils/errors.js';
 
 /**
  * Lógica de negocio para el perfil del estudiante.
  */
-const StudentService = {
+const StudentsService = {
   /**
    * Devuelve el perfil completo del estudiante autenticado.
    *
@@ -14,7 +14,7 @@ const StudentService = {
    * @throws {HttpError} 404 si no existe el perfil
    */
   async getProfile(userId) {
-    const profile = await StudentRepository.findByUserId(userId);
+    const profile = await StudentsRepository.findByUserId(userId);
     if (!profile) {
       throw new HttpError('Perfil de estudiante no encontrado', 404);
     }
@@ -26,17 +26,17 @@ const StudentService = {
    * Al menos uno de los campos debe estar presente.
    *
    * @param {string} userId
-   * @param {{ availability?: boolean, portfolio_url?: string }} data
+   * @param {{ availability?: boolean, portfolioUrl?: string }} data
    * @returns {Promise<object>} Perfil actualizado
    * @throws {HttpError} 400 si no se provee ningún campo
    * @throws {HttpError} 404 si no existe el perfil
    */
-  async updateProfile(userId, { availability, portfolio_url }) {
-    if (availability === undefined && portfolio_url === undefined) {
+  async updateProfile(userId, { availability, portfolioUrl }) {
+    if (availability === undefined && portfolioUrl === undefined) {
       throw new HttpError('Debe proporcionar al menos un campo para actualizar', 400);
     }
 
-    const existing = await StudentRepository.findByUserId(userId);
+    const existing = await StudentsRepository.findByUserId(userId);
     if (!existing) {
       throw new HttpError('Perfil de estudiante no encontrado', 404);
     }
@@ -44,8 +44,8 @@ const StudentService = {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await StudentRepository.update(
-        { userId, availability, portfolioUrl: portfolio_url },
+      await StudentsRepository.update(
+        { userId, availability, portfolioUrl },
         client,
       );
       await client.query('COMMIT');
@@ -56,7 +56,7 @@ const StudentService = {
       client.release();
     }
 
-    return StudentRepository.findByUserId(userId);
+    return StudentsRepository.findByUserId(userId);
   },
 
   /**
@@ -84,7 +84,7 @@ const StudentService = {
       }
     }
 
-    const existing = await StudentRepository.findByUserId(userId);
+    const existing = await StudentsRepository.findByUserId(userId);
     if (!existing) {
       throw new HttpError('Perfil de estudiante no encontrado', 404);
     }
@@ -92,7 +92,7 @@ const StudentService = {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await StudentRepository.upsertSkills(userId, skills, client);
+      await StudentsRepository.upsertSkills(userId, skills, client);
       await client.query('COMMIT');
     } catch (err) {
       await client.query('ROLLBACK');
@@ -101,8 +101,8 @@ const StudentService = {
       client.release();
     }
 
-    return StudentRepository.findByUserId(userId);
+    return StudentsRepository.findByUserId(userId);
   },
 };
 
-export default StudentService;
+export default StudentsService;

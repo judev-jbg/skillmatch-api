@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import NgoController from '../controllers/ngos.controller.js';
-import NgoService from '../services/ngos.service.js';
+import NgosController from '../controllers/ngos.controller.js';
+import NgosService from '../services/ngos.service.js';
 import { HttpError } from '../utils/errors.js';
 
 vi.mock('../services/ngos.service.js');
@@ -35,31 +35,31 @@ const FAKE_PROFILE = {
   verified: false,
 };
 
-describe('NgoController', () => {
+describe('NgosController', () => {
   beforeEach(() => vi.clearAllMocks());
 
   // ── getMe ──────────────────────────────────────────────────────────────────
 
   describe('getMe', () => {
     it('responde 200 con el perfil de la ONG', async () => {
-      NgoService.getProfile.mockResolvedValue(FAKE_PROFILE);
+      NgosService.getProfile.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
-      await NgoController.getMe(mockReq(), res);
+      await NgosController.getMe(mockReq(), res);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(FAKE_PROFILE);
     });
 
     it('responde 404 si el servicio lanza HttpError 404', async () => {
-      NgoService.getProfile.mockRejectedValue(new HttpError('no encontrado', 404));
+      NgosService.getProfile.mockRejectedValue(new HttpError('no encontrado', 404));
       const res = mockRes();
-      await NgoController.getMe(mockReq(), res);
+      await NgosController.getMe(mockReq(), res);
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
     it('responde 500 ante error inesperado', async () => {
-      NgoService.getProfile.mockRejectedValue(new Error('db fail'));
+      NgosService.getProfile.mockRejectedValue(new Error('db fail'));
       const res = mockRes();
-      await NgoController.getMe(mockReq(), res);
+      await NgosController.getMe(mockReq(), res);
       expect(res.status).toHaveBeenCalledWith(500);
     });
   });
@@ -69,34 +69,34 @@ describe('NgoController', () => {
   describe('updateMe', () => {
     it('responde 200 con el perfil actualizado', async () => {
       const updated = { ...FAKE_PROFILE, area: 'Salud' };
-      NgoService.updateProfile.mockResolvedValue(updated);
+      NgosService.updateProfile.mockResolvedValue(updated);
       const res = mockRes();
-      await NgoController.updateMe(mockReq({ area: 'Salud' }), res);
+      await NgosController.updateMe(mockReq({ area: 'Salud' }), res);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(updated);
     });
 
     it('responde 400 si el servicio lanza HttpError 400', async () => {
-      NgoService.updateProfile.mockRejectedValue(new HttpError('debe proporcionar al menos un campo', 400));
+      NgosService.updateProfile.mockRejectedValue(new HttpError('debe proporcionar al menos un campo', 400));
       const res = mockRes();
-      await NgoController.updateMe(mockReq({}), res);
+      await NgosController.updateMe(mockReq({}), res);
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
     it('delega userId desde req.user.id', async () => {
-      NgoService.updateProfile.mockResolvedValue(FAKE_PROFILE);
+      NgosService.updateProfile.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
-      await NgoController.updateMe(mockReq({ organization_name: 'Nueva ONG' }), res);
-      expect(NgoService.updateProfile).toHaveBeenCalledWith(
+      await NgosController.updateMe(mockReq({ organization_name: 'Nueva ONG' }), res);
+      expect(NgosService.updateProfile).toHaveBeenCalledWith(
         'uuid-1',
-        expect.objectContaining({ organization_name: 'Nueva ONG' }),
+        expect.objectContaining({ organizationName: 'Nueva ONG' }),
       );
     });
 
     it('responde 500 ante error inesperado', async () => {
-      NgoService.updateProfile.mockRejectedValue(new Error('db fail'));
+      NgosService.updateProfile.mockRejectedValue(new Error('db fail'));
       const res = mockRes();
-      await NgoController.updateMe(mockReq({ area: 'Salud' }), res);
+      await NgosController.updateMe(mockReq({ area: 'Salud' }), res);
       expect(res.status).toHaveBeenCalledWith(500);
     });
   });

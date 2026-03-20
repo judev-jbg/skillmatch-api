@@ -72,7 +72,7 @@ describe('ProjectsController', () => {
       ProjectsService.getAll.mockResolvedValue([]);
       const res = mockRes();
       await ProjectsController.getAll(mockReq({ query: { status: 'pending', skill_id: 'sk-1' } }), res);
-      expect(ProjectsService.getAll).toHaveBeenCalledWith({ status: 'pending', skill_id: 'sk-1' });
+      expect(ProjectsService.getAll).toHaveBeenCalledWith({ status: 'pending', skillId: 'sk-1' });
     });
 
     it('responde 400 si status es inválido', async () => {
