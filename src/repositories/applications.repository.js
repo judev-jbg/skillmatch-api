@@ -6,16 +6,16 @@ import pool from '../config/db.js';
 const ApplicationsRepository = {
   /**
    * Inserta una nueva aplicación.
-   * @param {{ projectId: string, studentId: string }} data
+   * @param {{ projectId: string, studentId: string, compatibilityScore: number }} data
    * @param {import('pg').PoolClient} client
    * @returns {Promise<object>} Aplicación creada
    */
-  async create({ projectId, studentId }, client) {
+  async create({ projectId, studentId, compatibilityScore }, client) {
     const { rows } = await client.query(
-      `INSERT INTO applications (project_id, student_id)
-       VALUES ($1, $2)
+      `INSERT INTO applications (project_id, student_id, compatibility_score)
+       VALUES ($1, $2, $3)
        RETURNING *`,
-      [projectId, studentId],
+      [projectId, studentId, compatibilityScore],
     );
     return rows[0];
   },
@@ -45,7 +45,7 @@ const ApplicationsRepository = {
        FROM applications a
        JOIN users u ON u.id = a.student_id
        WHERE a.project_id = $1
-       ORDER BY a.status, a.id`,
+       ORDER BY a.status, a.compatibility_score DESC, a.id`,
       [projectId],
     );
     return rows;

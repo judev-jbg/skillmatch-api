@@ -1,6 +1,8 @@
 import pool from '../config/db.js';
 import ApplicationsRepository from '../repositories/applications.repository.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
+import StudentsRepository from '../repositories/students.repository.js';
+import calculateScore from './matching.service.js';
 import { HttpError } from '../utils/errors.js';
 
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -30,15 +32,22 @@ const ApplicationsService = {
       throw new HttpError('Proyecto no encontrado', 404);
     }
 
+    const student = await StudentsRepository.findByUserId(studentId);
+    if (!student) {
+      throw new HttpError('Estudiante no encontrado', 404);
+    }
+
     const existing = await ApplicationsRepository.findByProjectAndStudent(project_id, studentId);
     if (existing) {
       throw new HttpError('Ya has aplicado a este proyecto', 409);
     }
 
+    const compatibilityScore = calculateScore(student.skills, project.skills)
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const application = await ApplicationsRepository.create({ projectId: project_id, studentId }, client);
+      const application = await ApplicationsRepository.create({ projectId: project_id, studentId, compatibilityScore }, client);
       await client.query('COMMIT');
       return application;
     } catch (err) {
