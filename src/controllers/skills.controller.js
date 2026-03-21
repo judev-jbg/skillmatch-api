@@ -27,6 +27,27 @@ const SkillsController = {
   },
 
   /**
+   * GET /skills
+   * Lista skills con filtros opcionales por categoría.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getAll(req, res) {
+    const { category } = req.query;
+    try {
+      const skills = await SkillsService.getAll({ category });
+      return res.status(200).json(skills);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[SkillsController.getAll]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
+
+  /**
    * PUT /admin/skills/:id
    * Actualiza una skill existente.
    *

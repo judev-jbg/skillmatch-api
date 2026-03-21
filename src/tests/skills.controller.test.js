@@ -26,6 +26,32 @@ const FAKE_SKILL = {
 describe('SkillsController', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  // ── getAll ──────────────────────────────────────────────────────────────────
+
+  describe('getAll', () => {
+    it('responde 200 con lista de skills', async () => {
+      SkillsService.getAll.mockResolvedValue([FAKE_SKILL]);
+      const res = mockRes();
+      await SkillsController.getAll(mockReq({ query: {} }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([FAKE_SKILL]);
+    });
+
+    it('pasa el filtro de category al servicio', async () => {
+      SkillsService.getAll.mockResolvedValue([]);
+      const res = mockRes();
+      await SkillsController.getAll(mockReq({ query: { category: 'Desarrollo' } }), res);
+      expect(SkillsService.getAll).toHaveBeenCalledWith({ category: 'Desarrollo' });
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      SkillsService.getAll.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await SkillsController.getAll(mockReq({ query: {} }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
   // ── create ──────────────────────────────────────────────────────────────────
 
   describe('create', () => {
