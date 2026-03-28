@@ -9,6 +9,7 @@ import ngoRoutes from './routes/ngos.routes.js';
 import projectRoutes from './routes/projects.routes.js';
 import applicationRoutes from './routes/applications.routes.js';
 import skillRoutes from './routes/skills.routes.js';
+import assignmentRoutes from './routes/assignments.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
@@ -41,6 +42,9 @@ app.use('/applications', applicationRoutes);
 
 /** Rutas de skills (catálogo público) */
 app.use('/skills', skillRoutes);
+
+/** Rutas de asignaciones */
+app.use('/assignments', assignmentRoutes);
 
 /** Rutas de administración */
 app.use('/admin', adminRoutes);

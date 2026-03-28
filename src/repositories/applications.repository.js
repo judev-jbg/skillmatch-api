@@ -78,6 +78,20 @@ const ApplicationsRepository = {
     );
     return rows[0];
   },
+  /**
+   * Rechaza todas las applications de un proyecto excepto una.
+   * @param {string} projectId
+   * @param {string} excludeId - ID de la application que NO se rechaza
+   * @param {import('pg').PoolClient} client
+   * @returns {Promise<void>}
+   */
+  async rejectAllExcept(projectId, excludeId, client) {
+    await client.query(
+      `UPDATE applications SET status = 'rejected'
+       WHERE project_id = $1 AND id != $2 AND status = 'pending'`,
+      [projectId, excludeId],
+    );
+  },
 };
 
 export default ApplicationsRepository;

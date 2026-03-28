@@ -92,6 +92,19 @@ const options = {
             student_email: { type: "string", format: "email" },
           },
         },
+        Assignment: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            project_id: { type: "string", format: "uuid" },
+            student_id: { type: "string", format: "uuid" },
+            student_name: { type: "string" },
+            student_email: { type: "string", format: "email" },
+            agreement_data: { type: "object", nullable: true },
+            start_date: { type: "string", format: "date-time" },
+            end_date: { type: "string", format: "date-time", nullable: true },
+          },
+        },
         Skill: {
           type: "object",
           properties: {
