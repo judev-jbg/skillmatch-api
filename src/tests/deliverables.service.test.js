@@ -200,4 +200,98 @@ describe('DeliverablesService', () => {
       expect(result.status).toBe('in_review');
     });
   });
+
+  // ── review ──────────────────────────────────────────────────────────────────
+
+  describe('review', () => {
+    it('lanza HttpError 400 si status no es approved/rejected', async () => {
+      await expect(
+        DeliverablesService.review('del-1', 'ngo-1', { status: 'invalid' }),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 400 si falta status', async () => {
+      await expect(
+        DeliverablesService.review('del-1', 'ngo-1', {}),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 404 si el entregable no existe', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(null);
+      await expect(
+        DeliverablesService.review('bad', 'ngo-1', { status: 'approved' }),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 400 si el entregable no esta en in_review', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(FAKE_DELIVERABLE); // status: pending
+      await expect(
+        DeliverablesService.review('del-1', 'ngo-1', { status: 'approved' }),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 403 si la ONG no es propietaria', async () => {
+      DeliverablesRepository.findById.mockResolvedValue({ ...FAKE_DELIVERABLE, status: 'in_review' });
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      await expect(
+        DeliverablesService.review('del-1', 'otra-ngo', { status: 'approved' }),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('rechaza el entregable y pasa el proyecto a rejected', async () => {
+      const inReview = { ...FAKE_DELIVERABLE, status: 'in_review' };
+      const rejected = { ...FAKE_DELIVERABLE, status: 'rejected' };
+      DeliverablesRepository.findById.mockResolvedValue(inReview);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      DeliverablesRepository.update.mockResolvedValue(rejected);
+      ProjectsRepository.updateStatus.mockResolvedValue();
+
+      const result = await DeliverablesService.review('del-1', 'ngo-1', { status: 'rejected' });
+
+      expect(DeliverablesRepository.update).toHaveBeenCalledWith('del-1', { status: 'rejected' });
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'rejected');
+      expect(result.status).toBe('rejected');
+    });
+
+    it('aprueba el entregable y pasa proyecto a in_progress si quedan mas', async () => {
+      const inReview = { ...FAKE_DELIVERABLE, status: 'in_review' };
+      const approved = { ...FAKE_DELIVERABLE, status: 'approved' };
+      DeliverablesRepository.findById.mockResolvedValue(inReview);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      DeliverablesRepository.update.mockResolvedValue(approved);
+      // Hay otro entregable pendiente
+      DeliverablesRepository.findByAssignment.mockResolvedValue([
+        approved,
+        { ...FAKE_DELIVERABLE, id: 'del-2', status: 'pending' },
+      ]);
+      ProjectsRepository.updateStatus.mockResolvedValue();
+
+      const result = await DeliverablesService.review('del-1', 'ngo-1', { status: 'approved' });
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'in_progress');
+      expect(result.status).toBe('approved');
+    });
+
+    it('aprueba el ultimo entregable y pasa proyecto a completed', async () => {
+      const inReview = { ...FAKE_DELIVERABLE, status: 'in_review' };
+      const approved = { ...FAKE_DELIVERABLE, status: 'approved' };
+      DeliverablesRepository.findById.mockResolvedValue(inReview);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      DeliverablesRepository.update.mockResolvedValue(approved);
+      // Todos aprobados
+      DeliverablesRepository.findByAssignment.mockResolvedValue([approved]);
+      ProjectsRepository.updateStatus.mockResolvedValue();
+      AssignmentsRepository.setEndDate.mockResolvedValue();
+
+      const result = await DeliverablesService.review('del-1', 'ngo-1', { status: 'approved' });
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed');
+      expect(AssignmentsRepository.setEndDate).toHaveBeenCalledWith('assign-1');
+      expect(result.status).toBe('approved');
+    });
+  });
 });

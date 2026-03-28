@@ -94,6 +94,26 @@ const DeliverablesController = {
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   },
+  /**
+   * PUT /deliverables/:id/review
+   * La ONG aprueba o rechaza un entregable.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async review(req, res) {
+    const { status } = req.body;
+    try {
+      const deliverable = await DeliverablesService.review(req.params.id, req.user.id, { status });
+      return res.status(200).json(deliverable);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[DeliverablesController.review]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
 };
 
 export default DeliverablesController;
