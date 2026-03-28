@@ -208,4 +208,76 @@ describe('ProjectsService', () => {
       expect(fakeClient.release).toHaveBeenCalled();
     });
   });
+
+  // ── transitionStatus ──────────────────────────────────────────────────────
+
+  describe('transitionStatus', () => {
+    it('lanza HttpError 404 si el proyecto no existe', async () => {
+      ProjectsRepository.findById.mockResolvedValue(null);
+      await expect(
+        ProjectsService.transitionStatus('bad-id', 'assigned', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 403 si no es la ONG propietaria', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'assigned', 'otra-ngo'),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('lanza HttpError 400 si la transicion no es valida', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT); // status: pending
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 400 si el proyecto esta en completed', async () => {
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'in_progress', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 400 si el proyecto esta en cancelled', async () => {
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'cancelled' });
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'pending', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('transiciona pending -> assigned correctamente', async () => {
+      const updated = { ...FAKE_PROJECT, status: 'assigned' };
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT); // status: pending
+      ProjectsRepository.updateStatus.mockResolvedValue(updated);
+
+      const result = await ProjectsService.transitionStatus('proj-1', 'assigned', 'ngo-1');
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'assigned', undefined);
+      expect(result).toEqual(updated);
+    });
+
+    it('transiciona pending -> cancelled correctamente', async () => {
+      const updated = { ...FAKE_PROJECT, status: 'cancelled' };
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      ProjectsRepository.updateStatus.mockResolvedValue(updated);
+
+      const result = await ProjectsService.transitionStatus('proj-1', 'cancelled', 'ngo-1');
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'cancelled', undefined);
+      expect(result).toEqual(updated);
+    });
+
+    it('transiciona in_review -> rejected correctamente', async () => {
+      const inReview = { ...FAKE_PROJECT, status: 'in_review' };
+      const rejected = { ...FAKE_PROJECT, status: 'rejected' };
+      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.updateStatus.mockResolvedValue(rejected);
+
+      const result = await ProjectsService.transitionStatus('proj-1', 'rejected', 'ngo-1');
+
+      expect(result.status).toBe('rejected');
+    });
+  });
 });

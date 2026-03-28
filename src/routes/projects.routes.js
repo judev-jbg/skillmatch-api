@@ -303,4 +303,67 @@ router.put('/:id', verifyToken, requireRole('ngo'), ProjectsController.update);
  */
 router.put('/:id/skills', verifyToken, requireRole('ngo'), ProjectsController.updateSkills);
 
+/**
+ * @openapi
+ * /projects/{id}/status:
+ *   put:
+ *     tags:
+ *       - Projects
+ *     summary: Cambiar estado de un proyecto
+ *     description: Valida que la transicion sea permitida segun el flujo de estados. Solo la ONG propietaria.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, assigned, in_progress, in_review, rejected, completed, cancelled]
+ *     responses:
+ *       200:
+ *         description: Estado actualizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Transicion no permitida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No eres propietario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Proyecto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/status', verifyToken, requireRole('ngo'), ProjectsController.transitionStatus);
+
 export default router;

@@ -102,6 +102,27 @@ const ProjectsController = {
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   },
+  
+  /**
+   * PUT /projects/:id/status
+   * Actualiza el estado de un proyecto. Solo la ONG propietaria.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async transitionStatus(req, res) {
+    const { status } = req.body;
+    try {
+      const project = await ProjectsService.transitionStatus(req.params.id, status, req.user.id);
+      return res.status(200).json(project);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[ProjectsController.transitionStatus]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
 
   /**
    * PUT /projects/:id/skills

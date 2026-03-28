@@ -168,4 +168,52 @@ describe('ProjectsController', () => {
       expect(ProjectsService.updateSkills).toHaveBeenCalledWith('proj-1', 'ngo-1', skills);
     });
   });
+
+  // ── transitionStatus ──────────────────────────────────────────────────────
+
+  describe('transitionStatus', () => {
+    it('responde 200 con el proyecto actualizado', async () => {
+      const updated = { ...FAKE_PROJECT, status: 'assigned' };
+      ProjectsService.transitionStatus.mockResolvedValue(updated);
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'proj-1' }, body: { status: 'assigned' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it('responde 400 si la transicion no es valida', async () => {
+      ProjectsService.transitionStatus.mockRejectedValue(new HttpError('Transicion no permitida', 400));
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'proj-1' }, body: { status: 'completed' } }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('responde 403 si no es propietario', async () => {
+      ProjectsService.transitionStatus.mockRejectedValue(new HttpError('No tienes permiso', 403));
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'proj-1' }, body: { status: 'assigned' } }), res);
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('responde 404 si no existe', async () => {
+      ProjectsService.transitionStatus.mockRejectedValue(new HttpError('Proyecto no encontrado', 404));
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'bad' }, body: { status: 'assigned' } }), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      ProjectsService.transitionStatus.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'proj-1' }, body: { status: 'assigned' } }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('delega id, status y userId correctamente', async () => {
+      ProjectsService.transitionStatus.mockResolvedValue(FAKE_PROJECT);
+      const res = mockRes();
+      await ProjectsController.transitionStatus(mockReq({ params: { id: 'proj-1' }, body: { status: 'assigned' } }), res);
+      expect(ProjectsService.transitionStatus).toHaveBeenCalledWith('proj-1', 'assigned', 'ngo-1');
+    });
+  });
 });
