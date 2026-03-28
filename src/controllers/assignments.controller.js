@@ -33,6 +33,26 @@ const AssignmentsController = {
    * @param {import('express').Request} req
    * @param {import('express').Response} res
    */
+  /**
+   * PUT /assignments/:id/accept
+   * El estudiante acepta la asignación y empieza a trabajar.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async accept(req, res) {
+    try {
+      const assignment = await AssignmentsService.accept(req.params.id, req.user.id);
+      return res.status(200).json(assignment);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[AssignmentsController.accept]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
+
   async getById(req, res) {
     try {
       const assignment = await AssignmentsService.getById(req.params.id);

@@ -99,4 +99,51 @@ describe('AssignmentsController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
     });
   });
+
+  // ── accept ──────────────────────────────────────────────────────────────────
+
+  describe('accept', () => {
+    it('responde 200 con el assignment aceptado', async () => {
+      AssignmentsService.accept.mockResolvedValue(FAKE_ASSIGNMENT);
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'assign-1' }, user: { id: 'student-1', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(FAKE_ASSIGNMENT);
+    });
+
+    it('delega assignmentId y studentId correctamente', async () => {
+      AssignmentsService.accept.mockResolvedValue(FAKE_ASSIGNMENT);
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'assign-1' }, user: { id: 'student-1', role: 'student' } }), res);
+      expect(AssignmentsService.accept).toHaveBeenCalledWith('assign-1', 'student-1');
+    });
+
+    it('responde 403 si no es el estudiante asignado', async () => {
+      AssignmentsService.accept.mockRejectedValue(new HttpError('no tienes permiso', 403));
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'assign-1' }, user: { id: 'otro', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('responde 400 si el proyecto no esta en assigned', async () => {
+      AssignmentsService.accept.mockRejectedValue(new HttpError('no esta en assigned', 400));
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'assign-1' }, user: { id: 'student-1', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('responde 404 si no existe', async () => {
+      AssignmentsService.accept.mockRejectedValue(new HttpError('no encontrada', 404));
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'bad' }, user: { id: 'student-1', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      AssignmentsService.accept.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await AssignmentsController.accept(mockReq({ params: { id: 'assign-1' }, user: { id: 'student-1', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
 });
