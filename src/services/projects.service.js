@@ -6,6 +6,20 @@ const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'in_review', 'reje
 const VALID_LEVELS = ['basic', 'intermediate', 'advanced'];
 
 /**
+ * Mapa de transiciones de estado válidas.
+ * Cada clave es el estado actual, el array son los estados destino permitidos.
+ */
+const VALID_TRANSITIONS = {
+  pending:     ['assigned', 'cancelled'],
+  assigned:    ['in_progress', 'cancelled'],
+  in_progress: ['in_review', 'cancelled'],
+  in_review:   ['in_progress', 'rejected', 'completed', 'cancelled'],
+  rejected:    ['in_review', 'cancelled'],
+  completed:   [],
+  cancelled:   [],
+};
+
+/**
  * Valida el array de skills de proyecto.
  * @param {any} skills
  * @throws {HttpError} 400 si el formato es inválido
@@ -168,6 +182,42 @@ const ProjectsService = {
     }
 
     return ProjectsRepository.findById(id);
+  },
+
+  /**
+   * Cambia el estado de un proyecto validando la transición.
+   * Reutilizable por otros services (assignments, deliverables).
+   *
+   * @param {string} id - UUID del proyecto
+   * @param {string} newStatus - Estado destino
+   * @param {string} userId - UUID del usuario que hace la acción
+   * @param {import('pg').PoolClient} [client] - Cliente de transacción (opcional)
+   * @returns {Promise<object>} Proyecto actualizado
+   * @throws {HttpError} 404 si no existe
+   * @throws {HttpError} 403 si el usuario no tiene permiso
+   * @throws {HttpError} 400 si la transición no es válida
+   */
+  async transitionStatus(id, newStatus, userId, client) {
+    const project = await ProjectsRepository.findById(id);
+    if (!project) {
+      throw new HttpError('Proyecto no encontrado', 404);
+    }
+
+    // Verificar que el usuario es la ONG propietaria
+    if (project.ngo_id !== userId) {
+      throw new HttpError('No tienes permiso para cambiar el estado de este proyecto', 403);
+    }
+
+    // Validar que la transición es legal
+    const allowed = VALID_TRANSITIONS[project.status];
+    if (!allowed || !allowed.includes(newStatus)) {
+      throw new HttpError(
+        `Transición no permitida: ${project.status} → ${newStatus}. Permitidas: ${allowed.join(', ') || 'ninguna'}`,
+        400,
+      );
+    }
+
+    return ProjectsRepository.updateStatus(id, newStatus, client);
   },
 };
 

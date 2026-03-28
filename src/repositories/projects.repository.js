@@ -101,7 +101,22 @@ const ProjectsRepository = {
       [id, title ?? null, description ?? null, objectives ?? null, estimatedHours ?? null, deadline ?? null, modality ?? null],
     );
   },
-
+  
+  /**
+   * Actualiza el estado de un proyecto.
+   * @param {string} id
+   * @param {string} newStatus
+   * @returns {Promise<object>} Proyecto actualizado
+   */
+   async updateStatus(id, newStatus, client) {
+     const db = client ?? pool;
+     const { rows } = await db.query(
+       `UPDATE projects SET status = $2 WHERE id = $1 RETURNING *`,
+       [id, newStatus],
+     );
+     return rows[0];
+  },
+   
   /**
    * Reemplaza las skills requeridas de un proyecto en `project_skills`.
    * @param {string} projectId
