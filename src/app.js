@@ -10,6 +10,7 @@ import projectRoutes from './routes/projects.routes.js';
 import applicationRoutes from './routes/applications.routes.js';
 import skillRoutes from './routes/skills.routes.js';
 import assignmentRoutes from './routes/assignments.routes.js';
+import deliverableRoutes from './routes/deliverables.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
@@ -45,6 +46,9 @@ app.use('/skills', skillRoutes);
 
 /** Rutas de asignaciones */
 app.use('/assignments', assignmentRoutes);
+
+/** Rutas de entregables */
+app.use('/deliverables', deliverableRoutes);
 
 /** Rutas de administración */
 app.use('/admin', adminRoutes);

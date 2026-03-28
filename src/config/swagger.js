@@ -92,6 +92,19 @@ const options = {
             student_email: { type: "string", format: "email" },
           },
         },
+        Deliverable: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            assignment_id: { type: "string", format: "uuid" },
+            title: { type: "string" },
+            description: { type: "string", nullable: true },
+            status: { type: "string", enum: ["pending", "in_progress", "in_review", "approved", "rejected"] },
+            file_url: { type: "string", format: "uri", nullable: true },
+            comment: { type: "string", nullable: true },
+            created_at: { type: "string", format: "date-time" },
+          },
+        },
         Assignment: {
           type: "object",
           properties: {
