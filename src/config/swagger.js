@@ -105,6 +105,19 @@ const options = {
             created_at: { type: "string", format: "date-time" },
           },
         },
+        Review: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            assignment_id: { type: "string", format: "uuid" },
+            from_user: { type: "string", format: "uuid" },
+            to_user: { type: "string", format: "uuid" },
+            reviewer_name: { type: "string" },
+            rating: { type: "number", minimum: 1, maximum: 5 },
+            comment: { type: "string", nullable: true },
+            created_at: { type: "string", format: "date-time" },
+          },
+        },
         Assignment: {
           type: "object",
           properties: {
