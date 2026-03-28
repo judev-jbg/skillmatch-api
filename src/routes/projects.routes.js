@@ -94,7 +94,7 @@ router.post('/', verifyToken, requireRole('ngo'), ProjectsController.create);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [pending, assigned, in_progress, in_review, rejected, approved, finished]
+ *           enum: [pending, assigned, in_progress, in_review, rejected, completed, cancelled]
  *       - in: query
  *         name: skill_id
  *         schema:

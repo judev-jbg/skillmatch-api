@@ -66,7 +66,7 @@ const options = {
             estimated_hours: { type: "integer", nullable: true },
             deadline: { type: "string", format: "date", nullable: true },
             modality: { type: "string", nullable: true },
-            status: { type: "string", enum: ["pending", "assigned", "in_progress", "in_review", "rejected", "approved", "finished"] },
+            status: { type: "string", enum: ["pending", "assigned", "in_progress", "in_review", "rejected", "completed", "cancelled"] },
             created_at: { type: "string", format: "date-time" },
             skills: {
               type: "array",

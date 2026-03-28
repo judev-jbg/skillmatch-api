@@ -2,7 +2,7 @@ import pool from '../config/db.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
 import { HttpError } from '../utils/errors.js';
 
-const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'in_review', 'rejected', 'approved', 'finished'];
+const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'in_review', 'rejected', 'completed', 'cancelled'];
 const VALID_LEVELS = ['basic', 'intermediate', 'advanced'];
 
 /**

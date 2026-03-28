@@ -12,13 +12,15 @@ CREATE TYPE project_status AS ENUM (
   'in_progress',
   'in_review',
   'rejected',
-  'approved',
-  'finished'
+  'completed',
+  'cancelled'
 );
 
 CREATE TYPE level_skill AS ENUM ('basic', 'intermediate', 'advanced');
 
 CREATE TYPE application_status AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TYPE deliverable_status AS ENUM ('pending', 'in_progress', 'in_review', 'approved', 'rejected');
 
 
 -- ============================
@@ -130,7 +132,10 @@ CREATE TABLE assignments (
 CREATE TABLE deliverables (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
-  file_url VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  status deliverable_status NOT NULL DEFAULT 'pending',
+  file_url VARCHAR(255),
   comment TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
