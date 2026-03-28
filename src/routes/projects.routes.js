@@ -366,4 +366,55 @@ router.put('/:id/skills', verifyToken, requireRole('ngo'), ProjectsController.up
  */
 router.put('/:id/status', verifyToken, requireRole('ngo'), ProjectsController.transitionStatus);
 
+/**
+ * @openapi
+ * /projects/{id}/cancel:
+ *   put:
+ *     tags:
+ *       - Projects
+ *     summary: Cancelar un proyecto
+ *     description: La ONG propietaria o el estudiante asignado pueden cancelar. No se puede cancelar un proyecto completado.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Proyecto cancelado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Proyecto completado o ya cancelado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No tienes permiso para cancelar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Proyecto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/cancel', verifyToken, ProjectsController.cancel);
+
 export default router;

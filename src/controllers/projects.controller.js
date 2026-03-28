@@ -144,6 +144,25 @@ const ProjectsController = {
       return res.status(500).json({ message: 'Error interno del servidor' });
     }
   },
+  /**
+   * PUT /projects/:id/cancel
+   * Cancela un proyecto. ONG propietaria o estudiante asignado.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async cancel(req, res) {
+    try {
+      const project = await ProjectsService.cancel(req.params.id, req.user.id);
+      return res.status(200).json(project);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return res.status(err.statusCode).json({ message: err.message });
+      }
+      console.error('[ProjectsController.cancel]', err);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  },
 };
 
 export default ProjectsController;

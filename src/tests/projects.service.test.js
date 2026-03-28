@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProjectsService from '../services/projects.service.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
+import AssignmentsRepository from '../repositories/assignments.repository.js';
 import pool from '../config/db.js';
 
 vi.mock('../repositories/projects.repository.js');
+vi.mock('../repositories/assignments.repository.js');
 vi.mock('../config/db.js', () => ({
   default: { connect: vi.fn() },
 }));
@@ -278,6 +280,61 @@ describe('ProjectsService', () => {
       const result = await ProjectsService.transitionStatus('proj-1', 'rejected', 'ngo-1');
 
       expect(result.status).toBe('rejected');
+    });
+  });
+
+  // ── cancel ──────────────────────────────────────────────────────────────────
+
+  describe('cancel', () => {
+    it('lanza HttpError 404 si el proyecto no existe', async () => {
+      ProjectsRepository.findById.mockResolvedValue(null);
+      await expect(ProjectsService.cancel('bad', 'ngo-1')).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 400 si el proyecto esta en completed', async () => {
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
+      await expect(ProjectsService.cancel('proj-1', 'ngo-1')).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 400 si el proyecto ya esta cancelado', async () => {
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'cancelled' });
+      await expect(ProjectsService.cancel('proj-1', 'ngo-1')).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 403 si no es ONG ni estudiante asignado', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      AssignmentsRepository.findByProject.mockResolvedValue({ student_id: 'student-1' });
+      await expect(ProjectsService.cancel('proj-1', 'extraño')).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('permite cancelar a la ONG propietaria', async () => {
+      const cancelled = { ...FAKE_PROJECT, status: 'cancelled' };
+      ProjectsRepository.findById
+        .mockResolvedValueOnce(FAKE_PROJECT)
+        .mockResolvedValueOnce(cancelled);
+      AssignmentsRepository.findByProject.mockResolvedValue(null);
+      ProjectsRepository.updateStatus.mockResolvedValue();
+
+      const result = await ProjectsService.cancel('proj-1', 'ngo-1');
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'cancelled');
+      expect(result.status).toBe('cancelled');
+    });
+
+    it('permite cancelar al estudiante asignado', async () => {
+      const cancelled = { ...FAKE_PROJECT, status: 'cancelled' };
+      ProjectsRepository.findById
+        .mockResolvedValueOnce(FAKE_PROJECT)
+        .mockResolvedValueOnce(cancelled);
+      AssignmentsRepository.findByProject.mockResolvedValue({ id: 'assign-1', student_id: 'student-1', end_date: null });
+      ProjectsRepository.updateStatus.mockResolvedValue();
+      AssignmentsRepository.setEndDate.mockResolvedValue();
+
+      const result = await ProjectsService.cancel('proj-1', 'student-1');
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'cancelled');
+      expect(AssignmentsRepository.setEndDate).toHaveBeenCalledWith('assign-1');
+      expect(result.status).toBe('cancelled');
     });
   });
 });

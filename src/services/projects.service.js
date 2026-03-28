@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
+import AssignmentsRepository from '../repositories/assignments.repository.js';
 import { HttpError } from '../utils/errors.js';
 
 const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'in_review', 'rejected', 'completed', 'cancelled'];
@@ -218,6 +219,54 @@ const ProjectsService = {
     }
 
     return ProjectsRepository.updateStatus(id, newStatus, client);
+  },
+
+  /**
+   * Cancela un proyecto.
+   * Puede cancelar la ONG propietaria o el estudiante asignado.
+   * No se puede cancelar un proyecto en 'completed'.
+   *
+   * @param {string} id - UUID del proyecto
+   * @param {string} userId - UUID del usuario que cancela
+   * @returns {Promise<object>} Proyecto cancelado
+   * @throws {HttpError} 404 si no existe
+   * @throws {HttpError} 403 si el usuario no tiene permiso
+   * @throws {HttpError} 400 si el proyecto está en completed
+   */
+  async cancel(id, userId) {
+    const project = await ProjectsRepository.findById(id);
+    if (!project) {
+      throw new HttpError('Proyecto no encontrado', 404);
+    }
+
+    if (project.status === 'completed') {
+      throw new HttpError('No se puede cancelar un proyecto completado', 400);
+    }
+
+    if (project.status === 'cancelled') {
+      throw new HttpError('El proyecto ya está cancelado', 400);
+    }
+
+    // Verificar que es la ONG propietaria o el estudiante asignado
+    const isNgo = project.ngo_id === userId;
+    let isStudent = false;
+
+    const assignment = await AssignmentsRepository.findByProject(id);
+    if (assignment) {
+      isStudent = assignment.student_id === userId;
+    }
+
+    if (!isNgo && !isStudent) {
+      throw new HttpError('No tienes permiso para cancelar este proyecto', 403);
+    }
+
+    // Cancelar y cerrar assignment si existe
+    await ProjectsRepository.updateStatus(id, 'cancelled');
+    if (assignment && !assignment.end_date) {
+      await AssignmentsRepository.setEndDate(assignment.id);
+    }
+
+    return ProjectsRepository.findById(id);
   },
 };
 

@@ -216,4 +216,52 @@ describe('ProjectsController', () => {
       expect(ProjectsService.transitionStatus).toHaveBeenCalledWith('proj-1', 'assigned', 'ngo-1');
     });
   });
+
+  // ── cancel ──────────────────────────────────────────────────────────────────
+
+  describe('cancel', () => {
+    it('responde 200 con el proyecto cancelado', async () => {
+      const cancelled = { ...FAKE_PROJECT, status: 'cancelled' };
+      ProjectsService.cancel.mockResolvedValue(cancelled);
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'proj-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(cancelled);
+    });
+
+    it('responde 400 si el proyecto esta completado', async () => {
+      ProjectsService.cancel.mockRejectedValue(new HttpError('No se puede cancelar', 400));
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'proj-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('responde 403 si no tiene permiso', async () => {
+      ProjectsService.cancel.mockRejectedValue(new HttpError('No tienes permiso', 403));
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'proj-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('responde 404 si no existe', async () => {
+      ProjectsService.cancel.mockRejectedValue(new HttpError('No encontrado', 404));
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'bad' } }), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      ProjectsService.cancel.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'proj-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('delega id y userId correctamente', async () => {
+      ProjectsService.cancel.mockResolvedValue(FAKE_PROJECT);
+      const res = mockRes();
+      await ProjectsController.cancel(mockReq({ params: { id: 'proj-1' } }), res);
+      expect(ProjectsService.cancel).toHaveBeenCalledWith('proj-1', 'ngo-1');
+    });
+  });
 });
