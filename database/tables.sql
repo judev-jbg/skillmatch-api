@@ -145,10 +145,13 @@ CREATE TABLE deliverables (
 -- ============================
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
   from_user UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   to_user UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rating DECIMAL(3,1) NOT NULL,
-  comment TEXT
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (assignment_id, from_user)
 );
 
 -- ============================
