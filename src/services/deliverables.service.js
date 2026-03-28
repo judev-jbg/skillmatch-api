@@ -151,6 +151,64 @@ const DeliverablesService = {
 
     return updated;
   },
+
+  /**
+   * La ONG aprueba o rechaza un entregable.
+   * - Si aprueba: entregable → approved. Si todos están approved → proyecto a completed. Si no → proyecto a in_progress.
+   * - Si rechaza: entregable → rejected, proyecto → rejected.
+   *
+   * @param {string} deliverableId
+   * @param {string} ngoId - UUID de la ONG autenticada
+   * @param {{ status: string }} data - 'approved' o 'rejected'
+   * @returns {Promise<object>} Entregable actualizado
+   * @throws {HttpError} 400 si status no es approved/rejected
+   * @throws {HttpError} 404 si el entregable no existe
+   * @throws {HttpError} 403 si la ONG no es propietaria
+   * @throws {HttpError} 400 si el entregable no está en in_review
+   */
+  async review(deliverableId, ngoId, { status }) {
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      throw new HttpError('El campo status debe ser approved o rejected', 400);
+    }
+
+    const deliverable = await DeliverablesRepository.findById(deliverableId);
+    if (!deliverable) {
+      throw new HttpError('Entregable no encontrado', 404);
+    }
+
+    if (deliverable.status !== 'in_review') {
+      throw new HttpError('Solo se puede revisar un entregable en estado in_review', 400);
+    }
+
+    const assignment = await AssignmentsRepository.findById(deliverable.assignment_id);
+    const project = await ProjectsRepository.findById(assignment.project_id);
+    if (!project || project.ngo_id !== ngoId) {
+      throw new HttpError('No tienes permiso para revisar este entregable', 403);
+    }
+
+    // Actualizar estado del entregable
+    const updated = await DeliverablesRepository.update(deliverableId, { status });
+
+    if (status === 'rejected') {
+      // Proyecto pasa a rejected
+      await ProjectsRepository.updateStatus(assignment.project_id, 'rejected');
+    } else {
+      // Comprobar si todos los entregables están approved
+      const all = await DeliverablesRepository.findByAssignment(deliverable.assignment_id);
+      const allApproved = all.every(d => d.status === 'approved');
+
+      if (allApproved) {
+        // Todos aprobados → proyecto completado, cerrar assignment
+        await ProjectsRepository.updateStatus(assignment.project_id, 'completed');
+        await AssignmentsRepository.setEndDate(assignment.id);
+      } else {
+        // Quedan más → proyecto vuelve a in_progress
+        await ProjectsRepository.updateStatus(assignment.project_id, 'in_progress');
+      }
+    }
+
+    return updated;
+  },
 };
 
 export default DeliverablesService;

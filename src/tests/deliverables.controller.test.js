@@ -157,4 +157,45 @@ describe('DeliverablesController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
     });
   });
+
+  // ── review ──────────────────────────────────────────────────────────────────
+
+  describe('review', () => {
+    it('responde 200 con el entregable revisado', async () => {
+      const approved = { ...FAKE_DELIVERABLE, status: 'approved' };
+      DeliverablesService.review.mockResolvedValue(approved);
+      const res = mockRes();
+      await DeliverablesController.review(mockReq({ params: { id: 'del-1' }, body: { status: 'approved' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(approved);
+    });
+
+    it('delega correctamente', async () => {
+      DeliverablesService.review.mockResolvedValue(FAKE_DELIVERABLE);
+      const res = mockRes();
+      await DeliverablesController.review(mockReq({ params: { id: 'del-1' }, body: { status: 'rejected' } }), res);
+      expect(DeliverablesService.review).toHaveBeenCalledWith('del-1', 'ngo-1', { status: 'rejected' });
+    });
+
+    it('responde 400 si status es invalido', async () => {
+      DeliverablesService.review.mockRejectedValue(new HttpError('status invalido', 400));
+      const res = mockRes();
+      await DeliverablesController.review(mockReq({ params: { id: 'del-1' }, body: { status: 'bad' } }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('responde 403 si no es propietario', async () => {
+      DeliverablesService.review.mockRejectedValue(new HttpError('no tienes permiso', 403));
+      const res = mockRes();
+      await DeliverablesController.review(mockReq({ params: { id: 'del-1' }, body: { status: 'approved' } }), res);
+      expect(res.status).toHaveBeenCalledWith(403);
+    });
+
+    it('responde 500 ante error inesperado', async () => {
+      DeliverablesService.review.mockRejectedValue(new Error('db fail'));
+      const res = mockRes();
+      await DeliverablesController.review(mockReq({ params: { id: 'del-1' }, body: { status: 'approved' } }), res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
 });

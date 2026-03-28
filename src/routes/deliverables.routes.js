@@ -235,4 +235,69 @@ router.put('/:id/start', verifyToken, requireRole('student'), DeliverablesContro
  */
 router.put('/:id/submit', verifyToken, requireRole('student'), DeliverablesController.submitForReview);
 
+/**
+ * @openapi
+ * /deliverables/{id}/review:
+ *   put:
+ *     tags:
+ *       - Deliverables
+ *     summary: Aprobar o rechazar un entregable
+ *     description: >
+ *       La ONG revisa un entregable. Si aprueba y es el ultimo, el proyecto pasa a completed.
+ *       Si rechaza, el proyecto pasa a rejected.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected]
+ *     responses:
+ *       200:
+ *         description: Entregable revisado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Deliverable'
+ *       400:
+ *         description: Status invalido o entregable no esta en in_review
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No eres propietario del proyecto
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Entregable no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/review', verifyToken, requireRole('ngo'), DeliverablesController.review);
+
 export default router;

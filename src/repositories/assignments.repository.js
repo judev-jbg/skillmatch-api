@@ -53,6 +53,20 @@ const AssignmentsRepository = {
     );
     return rows[0] ?? null;
   },
+  /**
+   * Marca un assignment como finalizado.
+   * @param {string} id
+   * @param {import('pg').PoolClient} [client]
+   * @returns {Promise<object>} Assignment actualizado
+   */
+  async setEndDate(id, client) {
+    const db = client ?? pool;
+    const { rows } = await db.query(
+      `UPDATE assignments SET end_date = NOW() WHERE id = $1 RETURNING *`,
+      [id],
+    );
+    return rows[0];
+  },
 };
 
 export default AssignmentsRepository;
