@@ -101,4 +101,55 @@ router.post('/', verifyToken, requireRole('ngo'), AssignmentsController.create);
  */
 router.get('/:id', verifyToken, AssignmentsController.getById);
 
+/**
+ * @openapi
+ * /assignments/{id}/accept:
+ *   put:
+ *     tags:
+ *       - Assignments
+ *     summary: Aceptar asignacion y empezar a trabajar
+ *     description: El estudiante asignado acepta y el proyecto pasa de 'assigned' a 'in_progress'.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Asignacion aceptada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Assignment'
+ *       400:
+ *         description: Proyecto no esta en estado assigned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No eres el estudiante asignado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Assignment no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/accept', verifyToken, requireRole('student'), AssignmentsController.accept);
+
 export default router;

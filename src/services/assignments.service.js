@@ -93,6 +93,36 @@ const AssignmentsService = {
    * @returns {Promise<object>}
    * @throws {HttpError} 404 si no existe
    */
+  /**
+   * El estudiante acepta la asignación y empieza a trabajar.
+   * Transiciona el proyecto de 'assigned' a 'in_progress'.
+   *
+   * @param {string} assignmentId - UUID del assignment
+   * @param {string} studentId - UUID del estudiante autenticado
+   * @returns {Promise<object>} Assignment aceptado
+   * @throws {HttpError} 404 si el assignment no existe
+   * @throws {HttpError} 403 si el estudiante no es el asignado
+   * @throws {HttpError} 400 si el proyecto no está en 'assigned'
+   */
+  async accept(assignmentId, studentId) {
+    const assignment = await AssignmentsRepository.findById(assignmentId);
+    if (!assignment) {
+      throw new HttpError('Asignación no encontrada', 404);
+    }
+
+    if (assignment.student_id !== studentId) {
+      throw new HttpError('No tienes permiso para aceptar esta asignación', 403);
+    }
+
+    const project = await ProjectsRepository.findById(assignment.project_id);
+    if (!project || project.status !== 'assigned') {
+      throw new HttpError('El proyecto no está en estado assigned', 400);
+    }
+
+    await ProjectsRepository.updateStatus(assignment.project_id, 'in_progress');
+    return assignment;
+  },
+
   async getById(id) {
     const assignment = await AssignmentsRepository.findById(id);
     if (!assignment) {

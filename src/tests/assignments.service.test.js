@@ -136,6 +136,43 @@ describe('AssignmentsService', () => {
     });
   });
 
+  // ── accept ───────────────────────────────────────────────────────────────────
+
+  describe('accept', () => {
+    it('lanza HttpError 404 si el assignment no existe', async () => {
+      AssignmentsRepository.findById.mockResolvedValue(null);
+      await expect(
+        AssignmentsService.accept('bad-id', 'student-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 403 si no es el estudiante asignado', async () => {
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      await expect(
+        AssignmentsService.accept('assign-1', 'otro-student'),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('lanza HttpError 400 si el proyecto no esta en assigned', async () => {
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'in_progress' });
+      await expect(
+        AssignmentsService.accept('assign-1', 'student-1'),
+      ).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('transiciona el proyecto a in_progress y retorna el assignment', async () => {
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'assigned' });
+      ProjectsRepository.updateStatus.mockResolvedValue();
+
+      const result = await AssignmentsService.accept('assign-1', 'student-1');
+
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'in_progress');
+      expect(result).toEqual(FAKE_ASSIGNMENT);
+    });
+  });
+
   // ── getById ─────────────────────────────────────────────────────────────────
 
   describe('getById', () => {
