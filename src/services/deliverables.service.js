@@ -72,15 +72,16 @@ const DeliverablesService = {
 
   /**
    * El estudiante empieza a trabajar en un entregable.
-   * Transiciona de 'pending' a 'in_progress'.
+   * Transiciona de 'pending' o 'rejected' a 'in_progress'.
    * Solo un entregable activo a la vez por assignment.
+   * Si se reinicia desde 'rejected', el proyecto vuelve a 'in_progress'.
    *
    * @param {string} deliverableId
    * @param {string} studentId - UUID del estudiante autenticado
    * @returns {Promise<object>} Entregable actualizado
    * @throws {HttpError} 404 si el entregable no existe
    * @throws {HttpError} 403 si no es el estudiante asignado
-   * @throws {HttpError} 400 si el entregable no está en pending
+   * @throws {HttpError} 400 si el entregable no está en pending ni rejected
    * @throws {HttpError} 400 si ya hay un entregable activo
    */
   async startWork(deliverableId, studentId) {
@@ -94,8 +95,8 @@ const DeliverablesService = {
       throw new HttpError('No tienes permiso para trabajar en este entregable', 403);
     }
 
-    if (deliverable.status !== 'pending') {
-      throw new HttpError('Solo se puede empezar un entregable en estado pending', 400);
+    if (!['pending', 'rejected'].includes(deliverable.status)) {
+      throw new HttpError('Solo se puede empezar un entregable en estado pending o rejected', 400);
     }
 
     const hasActive = await DeliverablesRepository.hasActiveDeliverable(deliverable.assignment_id);
@@ -103,7 +104,14 @@ const DeliverablesService = {
       throw new HttpError('Ya hay un entregable activo en esta asignación', 400);
     }
 
-    return DeliverablesRepository.update(deliverableId, { status: 'in_progress' });
+    const updated = await DeliverablesRepository.update(deliverableId, { status: 'in_progress' });
+
+    // Si se reinicia desde rejected, el proyecto vuelve a in_progress
+    if (deliverable.status === 'rejected') {
+      await ProjectsRepository.updateStatus(assignment.project_id, 'in_progress');
+    }
+
+    return updated;
   },
 
   /**
