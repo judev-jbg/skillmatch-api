@@ -15,7 +15,7 @@ const VALID_TRANSITIONS = {
   assigned:    ['in_progress', 'cancelled'],
   in_progress: ['in_review', 'cancelled'],
   in_review:   ['in_progress', 'rejected', 'completed', 'cancelled'],
-  rejected:    ['in_review', 'cancelled'],
+  rejected:    ['in_progress', 'in_review', 'cancelled'],
   completed:   [],
   cancelled:   [],
 };

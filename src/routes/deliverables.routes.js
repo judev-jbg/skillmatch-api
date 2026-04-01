@@ -126,7 +126,10 @@ router.get('/', verifyToken, DeliverablesController.getByAssignment);
  *     tags:
  *       - Deliverables
  *     summary: Empezar a trabajar en un entregable
- *     description: El estudiante empieza un entregable (pending -> in_progress). Solo uno activo a la vez.
+ *     description: >
+ *       El estudiante empieza un entregable (pending -> in_progress).
+ *       Tambien permite reintentar un entregable rechazado (rejected -> in_progress),
+ *       en cuyo caso el proyecto vuelve a in_progress. Solo uno activo a la vez.
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -144,7 +147,7 @@ router.get('/', verifyToken, DeliverablesController.getByAssignment);
  *             schema:
  *               $ref: '#/components/schemas/Deliverable'
  *       400:
- *         description: No esta en pending o ya hay un entregable activo
+ *         description: No esta en pending ni rejected, o ya hay un entregable activo
  *         content:
  *           application/json:
  *             schema:

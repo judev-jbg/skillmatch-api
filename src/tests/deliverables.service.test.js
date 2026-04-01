@@ -122,9 +122,32 @@ describe('DeliverablesService', () => {
       await expect(DeliverablesService.startWork('del-1', 'otro')).rejects.toMatchObject({ statusCode: 403 });
     });
 
-    it('lanza HttpError 400 si no esta en pending', async () => {
+    it('lanza HttpError 400 si no esta en pending ni rejected', async () => {
       DeliverablesRepository.findById.mockResolvedValue({ ...FAKE_DELIVERABLE, status: 'in_review' });
       AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      await expect(DeliverablesService.startWork('del-1', 'student-1')).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('CA1/CA2 — reinicia un entregable rejected a in_progress y resetea el proyecto', async () => {
+      const rejected = { ...FAKE_DELIVERABLE, status: 'rejected' };
+      const updated = { ...FAKE_DELIVERABLE, status: 'in_progress' };
+      DeliverablesRepository.findById.mockResolvedValue(rejected);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      DeliverablesRepository.hasActiveDeliverable.mockResolvedValue(false);
+      DeliverablesRepository.update.mockResolvedValue(updated);
+      ProjectsRepository.updateStatus.mockResolvedValue();
+
+      const result = await DeliverablesService.startWork('del-1', 'student-1');
+
+      expect(DeliverablesRepository.update).toHaveBeenCalledWith('del-1', { status: 'in_progress' });
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'in_progress');
+      expect(result.status).toBe('in_progress');
+    });
+
+    it('CA3 — lanza HttpError 400 si el entregable esta rejected pero ya hay uno activo', async () => {
+      DeliverablesRepository.findById.mockResolvedValue({ ...FAKE_DELIVERABLE, status: 'rejected' });
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      DeliverablesRepository.hasActiveDeliverable.mockResolvedValue(true);
       await expect(DeliverablesService.startWork('del-1', 'student-1')).rejects.toMatchObject({ statusCode: 400 });
     });
 
@@ -146,6 +169,18 @@ describe('DeliverablesService', () => {
 
       expect(DeliverablesRepository.update).toHaveBeenCalledWith('del-1', { status: 'in_progress' });
       expect(result.status).toBe('in_progress');
+    });
+
+    it('CA7 — entregable pending NO llama a ProjectsRepository.updateStatus (regresion)', async () => {
+      const updated = { ...FAKE_DELIVERABLE, status: 'in_progress' };
+      DeliverablesRepository.findById.mockResolvedValue(FAKE_DELIVERABLE); // status: pending
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      DeliverablesRepository.hasActiveDeliverable.mockResolvedValue(false);
+      DeliverablesRepository.update.mockResolvedValue(updated);
+
+      await DeliverablesService.startWork('del-1', 'student-1');
+
+      expect(ProjectsRepository.updateStatus).not.toHaveBeenCalled();
     });
   });
 
