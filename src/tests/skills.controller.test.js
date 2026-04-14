@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SkillsController from '../controllers/skills.controller.js';
 import SkillsService from '../services/skills.service.js';
-import { HttpError } from '../utils/errors.js';
 
 vi.mock('../services/skills.service.js');
 
@@ -26,8 +25,6 @@ const FAKE_SKILL = {
 describe('SkillsController', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ── getAll ──────────────────────────────────────────────────────────────────
-
   describe('getAll', () => {
     it('responde 200 con lista de skills', async () => {
       SkillsService.getAll.mockResolvedValue([FAKE_SKILL]);
@@ -43,16 +40,7 @@ describe('SkillsController', () => {
       await SkillsController.getAll(mockReq({ query: { category: 'Desarrollo' } }), res);
       expect(SkillsService.getAll).toHaveBeenCalledWith({ category: 'Desarrollo' });
     });
-
-    it('responde 500 ante error inesperado', async () => {
-      SkillsService.getAll.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await SkillsController.getAll(mockReq({ query: {} }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
-    });
   });
-
-  // ── create ──────────────────────────────────────────────────────────────────
 
   describe('create', () => {
     it('responde 201 con la skill creada', async () => {
@@ -63,20 +51,6 @@ describe('SkillsController', () => {
       expect(res.json).toHaveBeenCalledWith(FAKE_SKILL);
     });
 
-    it('responde 400 si el servicio lanza HttpError 400', async () => {
-      SkillsService.create.mockRejectedValue(new HttpError('name requerido', 400));
-      const res = mockRes();
-      await SkillsController.create(mockReq({ body: {} }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      SkillsService.create.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await SkillsController.create(mockReq({ body: { name: 'JS', category: 'Desarrollo' } }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
-    });
-
     it('delega name y category correctamente', async () => {
       SkillsService.create.mockResolvedValue(FAKE_SKILL);
       const res = mockRes();
@@ -84,8 +58,6 @@ describe('SkillsController', () => {
       expect(SkillsService.create).toHaveBeenCalledWith('JavaScript', 'Desarrollo');
     });
   });
-
-  // ── update ──────────────────────────────────────────────────────────────────
 
   describe('update', () => {
     it('responde 200 con la skill actualizada', async () => {
@@ -97,20 +69,6 @@ describe('SkillsController', () => {
       expect(res.json).toHaveBeenCalledWith(updated);
     });
 
-    it('responde 404 si no existe', async () => {
-      SkillsService.update.mockRejectedValue(new HttpError('no encontrada', 404));
-      const res = mockRes();
-      await SkillsController.update(mockReq({ params: { id: 'bad' }, body: { name: 'React' } }), res);
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      SkillsService.update.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await SkillsController.update(mockReq({ params: { id: 'sk-1' }, body: { name: 'React' } }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
-    });
-
     it('delega id, name y category correctamente', async () => {
       SkillsService.update.mockResolvedValue(FAKE_SKILL);
       const res = mockRes();
@@ -119,8 +77,6 @@ describe('SkillsController', () => {
     });
   });
 
-  // ── remove ──────────────────────────────────────────────────────────────────
-
   describe('remove', () => {
     it('responde 204 sin body', async () => {
       SkillsService.remove.mockResolvedValue();
@@ -128,20 +84,6 @@ describe('SkillsController', () => {
       await SkillsController.remove(mockReq({ params: { id: 'sk-1' } }), res);
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
-    });
-
-    it('responde 404 si no existe', async () => {
-      SkillsService.remove.mockRejectedValue(new HttpError('no encontrada', 404));
-      const res = mockRes();
-      await SkillsController.remove(mockReq({ params: { id: 'bad' } }), res);
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      SkillsService.remove.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await SkillsController.remove(mockReq({ params: { id: 'sk-1' } }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 });

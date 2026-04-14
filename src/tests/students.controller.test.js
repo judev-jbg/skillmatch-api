@@ -1,22 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import StudentsController from '../controllers/students.controller.js';
 import StudentsService from '../services/students.service.js';
-import { HttpError } from '../utils/errors.js';
 
 vi.mock('../services/students.service.js');
 
-/**
- * Crea un Request simulado con user inyectado por verifyToken.
- * @param {object} body
- * @param {object} user
- */
 function mockReq(body = {}, user = { id: 'uuid-1', role: 'student' }) {
   return { body, user };
 }
 
-/**
- * Crea un Response simulado con spies encadenados.
- */
 function mockRes() {
   const res = {};
   res.status = vi.fn().mockReturnValue(res);
@@ -32,8 +23,6 @@ const FAKE_PROFILE = {
 describe('StudentsController', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ── getMe ──────────────────────────────────────────────────────────────────
-
   describe('getMe', () => {
     it('responde 200 con el perfil del estudiante', async () => {
       StudentsService.getProfile.mockResolvedValue(FAKE_PROFILE);
@@ -42,23 +31,7 @@ describe('StudentsController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(FAKE_PROFILE);
     });
-
-    it('responde 404 si el servicio lanza HttpError', async () => {
-      StudentsService.getProfile.mockRejectedValue(new HttpError('no encontrado', 404));
-      const res = mockRes();
-      await StudentsController.getMe(mockReq(), res);
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      StudentsService.getProfile.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await StudentsController.getMe(mockReq(), res);
-      expect(res.status).toHaveBeenCalledWith(500);
-    });
   });
-
-  // ── updateMe ───────────────────────────────────────────────────────────────
 
   describe('updateMe', () => {
     it('responde 200 con el perfil actualizado', async () => {
@@ -70,13 +43,6 @@ describe('StudentsController', () => {
       expect(res.json).toHaveBeenCalledWith(updated);
     });
 
-    it('responde 400 si el servicio lanza HttpError 400', async () => {
-      StudentsService.updateProfile.mockRejectedValue(new HttpError('debe proporcionar al menos un campo', 400));
-      const res = mockRes();
-      await StudentsController.updateMe(mockReq({}), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
     it('delega userId desde req.user.id', async () => {
       StudentsService.updateProfile.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
@@ -85,8 +51,6 @@ describe('StudentsController', () => {
     });
   });
 
-  // ── updateSkills ───────────────────────────────────────────────────────────
-
   describe('updateSkills', () => {
     it('responde 200 con el perfil actualizado con skills', async () => {
       const skills = [{ skill_id: 'sk-1', level: 'basic' }];
@@ -94,20 +58,6 @@ describe('StudentsController', () => {
       const res = mockRes();
       await StudentsController.updateSkills(mockReq({ skills }), res);
       expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it('responde 400 si el servicio lanza HttpError de validación', async () => {
-      StudentsService.updateSkills.mockRejectedValue(new HttpError('skills debe ser un array', 400));
-      const res = mockRes();
-      await StudentsController.updateSkills(mockReq({ skills: 'bad' }), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      StudentsService.updateSkills.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await StudentsController.updateSkills(mockReq({ skills: [] }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 });

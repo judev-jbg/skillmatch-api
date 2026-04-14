@@ -1,5 +1,4 @@
 import AuthService from '../services/auth.service.js';
-import { HttpError } from '../utils/errors.js';
 
 /**
  * Convierte una duración tipo JWT (ej. '7d', '24h') a milisegundos.
@@ -39,24 +38,16 @@ const AuthController = {
       return res.status(400).json({ message: 'El formato del email no es válido' });
     }
 
-    try {
-      const user = await AuthService.register({
-        name,
-        email,
-        password,
-        role,
-        organizationName: organization_name,
-        area,
-      });
+    const user = await AuthService.register({
+      name,
+      email,
+      password,
+      role,
+      organizationName: organization_name,
+      area,
+    });
 
-      return res.status(201).json({ message: 'Usuario registrado correctamente', user });
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[AuthController.register]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    return res.status(201).json({ message: 'Usuario registrado correctamente', user });
   },
   /**
    * POST /auth/login
@@ -72,24 +63,16 @@ const AuthController = {
       return res.status(400).json({ message: 'Los campos email y password son requeridos' });
     }
 
-    try {
-      const { token, user } = await AuthService.login({ email, password });
+    const { token, user } = await AuthService.login({ email, password });
 
-      res.cookie('token', token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: parseDuration(process.env.JWT_EXPIRES_IN ?? '7d'),
-      });
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: parseDuration(process.env.JWT_EXPIRES_IN ?? '7d'),
+    });
 
-      return res.status(200).json({ message: 'Autenticación exitosa', user });
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[AuthController.login]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    return res.status(200).json({ message: 'Autenticación exitosa', user });
   },
 };
 

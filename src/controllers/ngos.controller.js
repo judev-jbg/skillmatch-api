@@ -1,5 +1,4 @@
 import NgosService from '../services/ngos.service.js';
-import { HttpError } from '../utils/errors.js';
 
 /**
  * Controlador para el perfil de la ONG.
@@ -14,16 +13,8 @@ const NgosController = {
    * @param {import('express').Response} res
    */
   async getMe(req, res) {
-    try {
-      const profile = await NgosService.getProfile(req.user.id);
-      return res.status(200).json(profile);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[NgosController.getMe]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const profile = await NgosService.getProfile(req.user.id);
+    return res.status(200).json(profile);
   },
 
   /**
@@ -35,16 +26,8 @@ const NgosController = {
    */
   async updateMe(req, res) {
     const { organization_name, description, area } = req.body;
-    try {
-      const profile = await NgosService.updateProfile(req.user.id, { organizationName: organization_name, description, area });
-      return res.status(200).json(profile);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[NgosController.updateMe]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const profile = await NgosService.updateProfile(req.user.id, { organizationName: organization_name, description, area });
+    return res.status(200).json(profile);
   },
 };
 

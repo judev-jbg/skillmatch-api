@@ -1,5 +1,4 @@
 import StudentsService from '../services/students.service.js';
-import { HttpError } from '../utils/errors.js';
 
 /**
  * Controlador para el perfil del estudiante.
@@ -14,16 +13,8 @@ const StudentsController = {
    * @param {import('express').Response} res
    */
   async getMe(req, res) {
-    try {
-      const profile = await StudentsService.getProfile(req.user.id);
-      return res.status(200).json(profile);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[StudentsController.getMe]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const profile = await StudentsService.getProfile(req.user.id);
+    return res.status(200).json(profile);
   },
 
   /**
@@ -35,16 +26,8 @@ const StudentsController = {
    */
   async updateMe(req, res) {
     const { availability, portfolio_url } = req.body;
-    try {
-      const profile = await StudentsService.updateProfile(req.user.id, { availability, portfolioUrl: portfolio_url });
-      return res.status(200).json(profile);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[StudentsController.updateMe]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const profile = await StudentsService.updateProfile(req.user.id, { availability, portfolioUrl: portfolio_url });
+    return res.status(200).json(profile);
   },
 
   /**
@@ -56,16 +39,8 @@ const StudentsController = {
    */
   async updateSkills(req, res) {
     const { skills } = req.body;
-    try {
-      const profile = await StudentsService.updateSkills(req.user.id, skills);
-      return res.status(200).json(profile);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[StudentsController.updateSkills]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const profile = await StudentsService.updateSkills(req.user.id, skills);
+    return res.status(200).json(profile);
   },
 };
 

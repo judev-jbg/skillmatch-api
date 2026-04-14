@@ -1,5 +1,4 @@
 import DeliverablesService from '../services/deliverables.service.js';
-import { HttpError } from '../utils/errors.js';
 
 /**
  * Controlador para la gestión de entregables.
@@ -14,20 +13,12 @@ const DeliverablesController = {
    */
   async create(req, res) {
     const { assignment_id, title, description } = req.body;
-    try {
-      const deliverable = await DeliverablesService.create(req.user.id, {
-        assignmentId: assignment_id,
-        title,
-        description,
-      });
-      return res.status(201).json(deliverable);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[DeliverablesController.create]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const deliverable = await DeliverablesService.create(req.user.id, {
+      assignmentId: assignment_id,
+      title,
+      description,
+    });
+    return res.status(201).json(deliverable);
   },
 
   /**
@@ -39,16 +30,8 @@ const DeliverablesController = {
    */
   async getByAssignment(req, res) {
     const { assignment_id } = req.query;
-    try {
-      const deliverables = await DeliverablesService.getByAssignment(assignment_id, req.user.id);
-      return res.status(200).json(deliverables);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[DeliverablesController.getByAssignment]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const deliverables = await DeliverablesService.getByAssignment(assignment_id, req.user.id);
+    return res.status(200).json(deliverables);
   },
 
   /**
@@ -59,16 +42,8 @@ const DeliverablesController = {
    * @param {import('express').Response} res
    */
   async startWork(req, res) {
-    try {
-      const deliverable = await DeliverablesService.startWork(req.params.id, req.user.id);
-      return res.status(200).json(deliverable);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[DeliverablesController.startWork]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const deliverable = await DeliverablesService.startWork(req.params.id, req.user.id);
+    return res.status(200).json(deliverable);
   },
 
   /**
@@ -80,20 +55,13 @@ const DeliverablesController = {
    */
   async submitForReview(req, res) {
     const { file_url, comment } = req.body;
-    try {
-      const deliverable = await DeliverablesService.submitForReview(req.params.id, req.user.id, {
-        fileUrl: file_url,
-        comment,
-      });
-      return res.status(200).json(deliverable);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[DeliverablesController.submitForReview]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const deliverable = await DeliverablesService.submitForReview(req.params.id, req.user.id, {
+      fileUrl: file_url,
+      comment,
+    });
+    return res.status(200).json(deliverable);
   },
+
   /**
    * PUT /deliverables/:id/review
    * La ONG aprueba o rechaza un entregable.
@@ -103,16 +71,8 @@ const DeliverablesController = {
    */
   async review(req, res) {
     const { status } = req.body;
-    try {
-      const deliverable = await DeliverablesService.review(req.params.id, req.user.id, { status });
-      return res.status(200).json(deliverable);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[DeliverablesController.review]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const deliverable = await DeliverablesService.review(req.params.id, req.user.id, { status });
+    return res.status(200).json(deliverable);
   },
 };
 
