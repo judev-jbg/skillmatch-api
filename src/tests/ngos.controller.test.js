@@ -1,22 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import NgosController from '../controllers/ngos.controller.js';
 import NgosService from '../services/ngos.service.js';
-import { HttpError } from '../utils/errors.js';
 
 vi.mock('../services/ngos.service.js');
 
-/**
- * Crea un Request simulado con user inyectado por verifyToken.
- * @param {object} body
- * @param {object} user
- */
 function mockReq(body = {}, user = { id: 'uuid-1', role: 'ngo' }) {
   return { body, user };
 }
 
-/**
- * Crea un Response simulado con spies encadenados.
- */
 function mockRes() {
   const res = {};
   res.status = vi.fn().mockReturnValue(res);
@@ -38,8 +29,6 @@ const FAKE_PROFILE = {
 describe('NgosController', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  // ── getMe ──────────────────────────────────────────────────────────────────
-
   describe('getMe', () => {
     it('responde 200 con el perfil de la ONG', async () => {
       NgosService.getProfile.mockResolvedValue(FAKE_PROFILE);
@@ -48,23 +37,7 @@ describe('NgosController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(FAKE_PROFILE);
     });
-
-    it('responde 404 si el servicio lanza HttpError 404', async () => {
-      NgosService.getProfile.mockRejectedValue(new HttpError('no encontrado', 404));
-      const res = mockRes();
-      await NgosController.getMe(mockReq(), res);
-      expect(res.status).toHaveBeenCalledWith(404);
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      NgosService.getProfile.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await NgosController.getMe(mockReq(), res);
-      expect(res.status).toHaveBeenCalledWith(500);
-    });
   });
-
-  // ── updateMe ───────────────────────────────────────────────────────────────
 
   describe('updateMe', () => {
     it('responde 200 con el perfil actualizado', async () => {
@@ -76,13 +49,6 @@ describe('NgosController', () => {
       expect(res.json).toHaveBeenCalledWith(updated);
     });
 
-    it('responde 400 si el servicio lanza HttpError 400', async () => {
-      NgosService.updateProfile.mockRejectedValue(new HttpError('debe proporcionar al menos un campo', 400));
-      const res = mockRes();
-      await NgosController.updateMe(mockReq({}), res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
     it('delega userId desde req.user.id', async () => {
       NgosService.updateProfile.mockResolvedValue(FAKE_PROFILE);
       const res = mockRes();
@@ -91,13 +57,6 @@ describe('NgosController', () => {
         'uuid-1',
         expect.objectContaining({ organizationName: 'Nueva ONG' }),
       );
-    });
-
-    it('responde 500 ante error inesperado', async () => {
-      NgosService.updateProfile.mockRejectedValue(new Error('db fail'));
-      const res = mockRes();
-      await NgosController.updateMe(mockReq({ area: 'Salud' }), res);
-      expect(res.status).toHaveBeenCalledWith(500);
     });
   });
 });

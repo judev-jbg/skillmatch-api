@@ -1,5 +1,4 @@
 import ApplicationsService from '../services/applications.service.js';
-import { HttpError } from '../utils/errors.js';
 
 /**
  * Controlador para la gestión de aplicaciones a proyectos.
@@ -14,16 +13,8 @@ const ApplicationsController = {
    */
   async create(req, res) {
     const { project_id } = req.body;
-    try {
-      const application = await ApplicationsService.create(req.user.id, { projectId: project_id });
-      return res.status(201).json(application);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[ApplicationsController.create]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const application = await ApplicationsService.create(req.user.id, { projectId: project_id });
+    return res.status(201).json(application);
   },
 
   /**
@@ -35,16 +26,8 @@ const ApplicationsController = {
    */
   async getByProject(req, res) {
     const { project_id } = req.query;
-    try {
-      const applications = await ApplicationsService.getByProject(project_id, req.user.id);
-      return res.status(200).json(applications);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[ApplicationsController.getByProject]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const applications = await ApplicationsService.getByProject(project_id, req.user.id);
+    return res.status(200).json(applications);
   },
 
   /**
@@ -56,16 +39,8 @@ const ApplicationsController = {
    */
   async updateStatus(req, res) {
     const { status } = req.body;
-    try {
-      const application = await ApplicationsService.updateStatus(req.params.id, req.user.id, { status });
-      return res.status(200).json(application);
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return res.status(err.statusCode).json({ message: err.message });
-      }
-      console.error('[ApplicationsController.updateStatus]', err);
-      return res.status(500).json({ message: 'Error interno del servidor' });
-    }
+    const application = await ApplicationsService.updateStatus(req.params.id, req.user.id, { status });
+    return res.status(200).json(application);
   },
 };
 
