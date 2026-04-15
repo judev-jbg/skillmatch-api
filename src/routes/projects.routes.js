@@ -126,6 +126,57 @@ router.get('/', verifyToken, ProjectsController.getAll);
 
 /**
  * @openapi
+ * /projects/me:
+ *   get:
+ *     tags:
+ *       - Projects
+ *     summary: Listar mis proyectos (ONG)
+ *     description: Devuelve solo los proyectos de la ONG autenticada. Solo rol ngo.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, assigned, in_progress, in_review, rejected, completed, cancelled]
+ *       - in: query
+ *         name: skill_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Lista de proyectos de la ONG
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Status inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acceso denegado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/me', verifyToken, requireRole('ngo'), ProjectsController.getOwn);
+
+/**
+ * @openapi
  * /projects/{id}:
  *   get:
  *     tags:

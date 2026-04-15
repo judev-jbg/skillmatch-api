@@ -108,6 +108,26 @@ describe('ProjectsService', () => {
     });
   });
 
+  // ── getOwn ──────────────────────────────────────────────────────────────────
+
+  describe('getOwn', () => {
+    it('devuelve los proyectos de la ONG autenticada', async () => {
+      ProjectsRepository.findAll.mockResolvedValue([FAKE_PROJECT]);
+      const result = await ProjectsService.getOwn('ngo-1');
+      expect(result).toEqual([FAKE_PROJECT]);
+    });
+
+    it('pasa ngoId y filtros al repositorio', async () => {
+      ProjectsRepository.findAll.mockResolvedValue([]);
+      await ProjectsService.getOwn('ngo-1', { status: 'pending', skillId: 'sk-1' });
+      expect(ProjectsRepository.findAll).toHaveBeenCalledWith({ ngoId: 'ngo-1', status: 'pending', skillId: 'sk-1' });
+    });
+
+    it('lanza HttpError 400 si status es inválido', async () => {
+      await expect(ProjectsService.getOwn('ngo-1', { status: 'invalid' })).rejects.toMatchObject({ statusCode: 400 });
+    });
+  });
+
   // ── getById ─────────────────────────────────────────────────────────────────
 
   describe('getById', () => {

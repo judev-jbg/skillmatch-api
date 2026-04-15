@@ -108,6 +108,7 @@ yarn.lock
 /.claude/
 /.atl/
 /memory/
+/CLAUDE.md
 package-lock.json
 package-lock.json.*
 
