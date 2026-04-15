@@ -33,6 +33,30 @@ const AssignmentsController = {
     const assignment = await AssignmentsService.getById(req.params.id);
     return res.status(200).json(assignment);
   },
+
+  /**
+   * GET /assignments/me
+   * El estudiante consulta sus assignments.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getOwn(req, res) {
+    const assignments = await AssignmentsService.getOwn(req.user.id);
+    return res.status(200).json(assignments);
+  },
+
+  /**
+   * GET /assignments?project_id=UUID
+   * La ONG consulta el assignment de uno de sus proyectos.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getByProject(req, res) {
+    const assignment = await AssignmentsService.getByProject(req.query.project_id, req.user.id);
+    return res.status(200).json(assignment);
+  },
 };
 
 export default AssignmentsController;

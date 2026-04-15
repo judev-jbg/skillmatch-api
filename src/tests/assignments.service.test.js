@@ -173,6 +173,61 @@ describe('AssignmentsService', () => {
     });
   });
 
+  // ── getOwn ──────────────────────────────────────────────────────────────────
+
+  describe('getOwn', () => {
+    it('retorna el array de assignments del estudiante', async () => {
+      AssignmentsRepository.findByStudent.mockResolvedValue([FAKE_ASSIGNMENT]);
+      const result = await AssignmentsService.getOwn('student-1');
+      expect(AssignmentsRepository.findByStudent).toHaveBeenCalledWith('student-1');
+      expect(result).toEqual([FAKE_ASSIGNMENT]);
+    });
+
+    it('retorna array vacío si el estudiante no tiene assignments', async () => {
+      AssignmentsRepository.findByStudent.mockResolvedValue([]);
+      const result = await AssignmentsService.getOwn('student-1');
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ── getByProject ─────────────────────────────────────────────────────────────
+
+  describe('getByProject', () => {
+    it('lanza HttpError 400 si falta projectId', async () => {
+      await expect(AssignmentsService.getByProject(undefined, 'ngo-1')).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('lanza HttpError 404 si el proyecto no existe', async () => {
+      ProjectsRepository.findById.mockResolvedValue(null);
+      await expect(
+        AssignmentsService.getByProject('proj-1', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 403 si la ONG no es propietaria', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      await expect(
+        AssignmentsService.getByProject('proj-1', 'otra-ngo'),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('lanza HttpError 404 si el proyecto no tiene assignment', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      AssignmentsRepository.findByProject.mockResolvedValue(null);
+      await expect(
+        AssignmentsService.getByProject('proj-1', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('retorna el assignment si todo es correcto', async () => {
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      AssignmentsRepository.findByProject.mockResolvedValue(FAKE_ASSIGNMENT);
+      const result = await AssignmentsService.getByProject('proj-1', 'ngo-1');
+      expect(AssignmentsRepository.findByProject).toHaveBeenCalledWith('proj-1');
+      expect(result).toEqual(FAKE_ASSIGNMENT);
+    });
+  });
+
   // ── getById ─────────────────────────────────────────────────────────────────
 
   describe('getById', () => {
