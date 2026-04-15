@@ -24,13 +24,17 @@ const ProjectsRepository = {
    * Devuelve todos los proyectos con filtros opcionales.
    * Incluye las skills requeridas agregadas como array JSON.
    *
-   * @param {{ status?: string, skillId?: string }} filters
+   * @param {{ status?: string, skillId?: string, ngoId?: string }} filters
    * @returns {Promise<object[]>}
    */
-  async findAll({ status, skillId } = {}) {
+  async findAll({ status, skillId, ngoId } = {}) {
     const conditions = [];
     const params = [];
 
+    if (ngoId) {
+      params.push(ngoId);
+      conditions.push(`p.ngo_id = $${params.length}`);
+    }
     if (status) {
       params.push(status);
       conditions.push(`p.status = $${params.length}`);

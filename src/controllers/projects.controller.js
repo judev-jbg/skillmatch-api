@@ -39,6 +39,19 @@ const ProjectsController = {
   },
 
   /**
+   * GET /projects/me
+   * Lista los proyectos de la ONG autenticada con filtros opcionales.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getOwn(req, res) {
+    const { status, skill_id } = req.query;
+    const projects = await ProjectsService.getOwn(req.user.id, { status, skillId: skill_id });
+    return res.status(200).json(projects);
+  },
+
+  /**
    * GET /projects/:id
    * Devuelve un proyecto por ID.
    *

@@ -57,6 +57,30 @@ describe('ProjectsController', () => {
     });
   });
 
+  describe('getOwn', () => {
+    it('responde 200 con los proyectos de la ONG', async () => {
+      ProjectsService.getOwn.mockResolvedValue([FAKE_PROJECT]);
+      const res = mockRes();
+      await ProjectsController.getOwn(mockReq({ query: {} }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([FAKE_PROJECT]);
+    });
+
+    it('delega ngoId desde req.user.id', async () => {
+      ProjectsService.getOwn.mockResolvedValue([]);
+      const res = mockRes();
+      await ProjectsController.getOwn(mockReq({ query: {} }), res);
+      expect(ProjectsService.getOwn).toHaveBeenCalledWith('ngo-1', expect.any(Object));
+    });
+
+    it('pasa los query params al servicio', async () => {
+      ProjectsService.getOwn.mockResolvedValue([]);
+      const res = mockRes();
+      await ProjectsController.getOwn(mockReq({ query: { status: 'pending', skill_id: 'sk-1' } }), res);
+      expect(ProjectsService.getOwn).toHaveBeenCalledWith('ngo-1', { status: 'pending', skillId: 'sk-1' });
+    });
+  });
+
   describe('getById', () => {
     it('responde 200 con el proyecto', async () => {
       ProjectsService.getById.mockResolvedValue(FAKE_PROJECT);
