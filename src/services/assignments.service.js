@@ -130,6 +130,50 @@ const AssignmentsService = {
     }
     return assignment;
   },
+
+  /**
+   * Devuelve todos los assignments del estudiante autenticado.
+   *
+   * @param {string} studentId - UUID del estudiante autenticado
+   * @returns {Promise<object[]>}
+   */
+  async getOwn(studentId) {
+    return AssignmentsRepository.findByStudent(studentId);
+  },
+
+  /**
+   * Devuelve el assignment de un proyecto.
+   * Solo la ONG propietaria del proyecto puede consultarlo.
+   *
+   * @param {string} projectId - UUID del proyecto
+   * @param {string} ngoId - UUID de la ONG autenticada
+   * @returns {Promise<object>}
+   * @throws {HttpError} 400 si falta projectId
+   * @throws {HttpError} 404 si el proyecto no existe
+   * @throws {HttpError} 403 si la ONG no es propietaria
+   * @throws {HttpError} 404 si el proyecto no tiene assignment
+   */
+  async getByProject(projectId, ngoId) {
+    if (!projectId) {
+      throw new HttpError('El parámetro project_id es requerido', 400);
+    }
+
+    const project = await ProjectsRepository.findById(projectId);
+    if (!project) {
+      throw new HttpError('Proyecto no encontrado', 404);
+    }
+
+    if (project.ngo_id !== ngoId) {
+      throw new HttpError('No tienes permiso para ver el assignment de este proyecto', 403);
+    }
+
+    const assignment = await AssignmentsRepository.findByProject(projectId);
+    if (!assignment) {
+      throw new HttpError('El proyecto no tiene ningún assignment', 404);
+    }
+
+    return assignment;
+  },
 };
 
 export default AssignmentsService;

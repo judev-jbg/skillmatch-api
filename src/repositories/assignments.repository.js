@@ -54,6 +54,24 @@ const AssignmentsRepository = {
     return rows[0] ?? null;
   },
   /**
+   * Devuelve todos los assignments de un estudiante.
+   * Incluye título y estado del proyecto asociado.
+   * @param {string} studentId
+   * @returns {Promise<object[]>}
+   */
+  async findByStudent(studentId) {
+    const { rows } = await pool.query(
+      `SELECT a.*, p.title AS project_title, p.status AS project_status
+       FROM assignments a
+       JOIN projects p ON p.id = a.project_id
+       WHERE a.student_id = $1
+       ORDER BY a.created_at DESC`,
+      [studentId],
+    );
+    return rows;
+  },
+
+  /**
    * Marca un assignment como finalizado.
    * @param {string} id
    * @param {import('pg').PoolClient} [client]

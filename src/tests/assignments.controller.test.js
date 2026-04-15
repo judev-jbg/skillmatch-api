@@ -53,6 +53,40 @@ describe('AssignmentsController', () => {
     });
   });
 
+  describe('getOwn', () => {
+    it('responde 200 con el array de assignments del estudiante', async () => {
+      AssignmentsService.getOwn.mockResolvedValue([FAKE_ASSIGNMENT]);
+      const res = mockRes();
+      await AssignmentsController.getOwn(mockReq({ user: { id: 'student-1', role: 'student' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([FAKE_ASSIGNMENT]);
+    });
+
+    it('delega studentId correctamente', async () => {
+      AssignmentsService.getOwn.mockResolvedValue([]);
+      const res = mockRes();
+      await AssignmentsController.getOwn(mockReq({ user: { id: 'student-1', role: 'student' } }), res);
+      expect(AssignmentsService.getOwn).toHaveBeenCalledWith('student-1');
+    });
+  });
+
+  describe('getByProject', () => {
+    it('responde 200 con el assignment del proyecto', async () => {
+      AssignmentsService.getByProject.mockResolvedValue(FAKE_ASSIGNMENT);
+      const res = mockRes();
+      await AssignmentsController.getByProject(mockReq({ query: { project_id: 'proj-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(FAKE_ASSIGNMENT);
+    });
+
+    it('delega projectId y ngoId correctamente', async () => {
+      AssignmentsService.getByProject.mockResolvedValue(FAKE_ASSIGNMENT);
+      const res = mockRes();
+      await AssignmentsController.getByProject(mockReq({ query: { project_id: 'proj-1' } }), res);
+      expect(AssignmentsService.getByProject).toHaveBeenCalledWith('proj-1', 'ngo-1');
+    });
+  });
+
   describe('accept', () => {
     it('responde 200 con el assignment aceptado', async () => {
       AssignmentsService.accept.mockResolvedValue(FAKE_ASSIGNMENT);
