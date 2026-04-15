@@ -121,6 +121,40 @@ router.get('/', verifyToken, requireRole('ngo'), ApplicationsController.getByPro
 
 /**
  * @openapi
+ * /applications/me:
+ *   get:
+ *     tags:
+ *       - Applications
+ *     summary: Listar mis aplicaciones (estudiante)
+ *     description: Devuelve todas las aplicaciones del estudiante autenticado, incluyendo título y estado del proyecto. Solo rol student.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de aplicaciones del estudiante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Application'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acceso denegado (no es estudiante)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/me', verifyToken, requireRole('student'), ApplicationsController.getOwn);
+
+/**
+ * @openapi
  * /applications/{id}:
  *   put:
  *     tags:

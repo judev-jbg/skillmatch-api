@@ -79,6 +79,24 @@ const ApplicationsRepository = {
     return rows[0];
   },
   /**
+   * Devuelve todas las aplicaciones del estudiante autenticado.
+   * Incluye título y estado del proyecto asociado.
+   * @param {string} studentId
+   * @returns {Promise<object[]>}
+   */
+  async findByStudent(studentId) {
+    const { rows } = await pool.query(
+      `SELECT a.*, p.title AS project_title, p.status AS project_status
+       FROM applications a
+       JOIN projects p ON p.id = a.project_id
+       WHERE a.student_id = $1
+       ORDER BY a.created_at DESC`,
+      [studentId],
+    );
+    return rows;
+  },
+
+  /**
    * Rechaza todas las applications de un proyecto excepto una.
    * @param {string} projectId
    * @param {string} excludeId - ID de la application que NO se rechaza

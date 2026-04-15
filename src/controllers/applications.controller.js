@@ -31,6 +31,18 @@ const ApplicationsController = {
   },
 
   /**
+   * GET /applications/me
+   * Lista las aplicaciones del estudiante autenticado. Solo rol `student`.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getOwn(req, res) {
+    const applications = await ApplicationsService.getOwn(req.user.id);
+    return res.status(200).json(applications);
+  },
+
+  /**
    * PUT /applications/:id
    * Actualiza el estado de una aplicación. Solo rol `ngo` propietaria.
    *
