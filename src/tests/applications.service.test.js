@@ -125,6 +125,22 @@ describe('ApplicationsService', () => {
     });
   });
 
+  // ── getOwn ────────────────────────────────────────────────────────────────
+
+  describe('getOwn', () => {
+    it('devuelve las aplicaciones del estudiante', async () => {
+      ApplicationsRepository.findByStudent.mockResolvedValue([FAKE_APPLICATION]);
+      const result = await ApplicationsService.getOwn('student-1');
+      expect(result).toEqual([FAKE_APPLICATION]);
+    });
+
+    it('pasa studentId al repositorio', async () => {
+      ApplicationsRepository.findByStudent.mockResolvedValue([]);
+      await ApplicationsService.getOwn('student-1');
+      expect(ApplicationsRepository.findByStudent).toHaveBeenCalledWith('student-1');
+    });
+  });
+
   // ── updateStatus ──────────────────────────────────────────────────────────
 
   describe('updateStatus', () => {

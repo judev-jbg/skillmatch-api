@@ -87,6 +87,16 @@ const ApplicationsService = {
   },
 
   /**
+   * Devuelve las aplicaciones del estudiante autenticado.
+   *
+   * @param {string} studentId - UUID del estudiante autenticado
+   * @returns {Promise<object[]>}
+   */
+  async getOwn(studentId) {
+    return ApplicationsRepository.findByStudent(studentId);
+  },
+
+  /**
    * Actualiza el estado de una aplicación.
    * Solo la ONG propietaria del proyecto puede cambiar el estado.
    *

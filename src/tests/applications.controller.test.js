@@ -69,6 +69,26 @@ describe('ApplicationsController', () => {
     });
   });
 
+  describe('getOwn', () => {
+    it('responde 200 con las aplicaciones del estudiante', async () => {
+      ApplicationsService.getOwn.mockResolvedValue([FAKE_APPLICATION]);
+      const res = mockRes();
+      await ApplicationsController.getOwn(mockReq(), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith([FAKE_APPLICATION]);
+    });
+
+    it('delega studentId desde req.user.id', async () => {
+      ApplicationsService.getOwn.mockResolvedValue([]);
+      const res = mockRes();
+      await ApplicationsController.getOwn(
+        mockReq({ user: { id: 'student-1', role: 'student' } }),
+        res,
+      );
+      expect(ApplicationsService.getOwn).toHaveBeenCalledWith('student-1');
+    });
+  });
+
   describe('updateStatus', () => {
     it('responde 200 con la aplicación actualizada', async () => {
       const updated = { ...FAKE_APPLICATION, status: 'approved' };
