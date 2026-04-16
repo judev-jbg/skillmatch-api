@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import AuthController from '../controllers/auth.controller.js';
+import { verifyToken } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -148,5 +149,37 @@ router.post('/register', AuthController.register);
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/login', AuthController.login);
+
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Cerrar sesión
+ *     description: >
+ *       Invalida la sesión del usuario limpiando la cookie HttpOnly `token`.
+ *       Requiere autenticación.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Sesión cerrada correctamente
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/logout', verifyToken, AuthController.logout);
 
 export default router;
