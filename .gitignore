@@ -70,6 +70,9 @@ temp-uploads/
 # Archivos de documentación generados
 docs/
 api-docs/
+
+# Certificados PDF generados
+uploads/
 apidoc/
 
 # Archivos específicos de Express.js
