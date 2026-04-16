@@ -74,6 +74,22 @@ const AuthController = {
 
     return res.status(200).json({ message: 'Autenticación exitosa', user });
   },
+
+  /**
+   * POST /auth/logout
+   * Cierra la sesión del usuario limpiando la cookie del token JWT.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async logout(req, res) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+    return res.status(200).json({ message: 'Sesión cerrada correctamente' });
+  },
 };
 
 export default AuthController;
