@@ -13,6 +13,7 @@ import assignmentRoutes from './routes/assignments.routes.js';
 import deliverableRoutes from './routes/deliverables.routes.js';
 import reviewRoutes from './routes/reviews.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import certificateRoutes from './routes/certificates.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 
 const app = express();
@@ -57,6 +58,9 @@ app.use('/reviews', reviewRoutes);
 
 /** Rutas de administración */
 app.use('/admin', adminRoutes);
+
+/** Rutas de certificados */
+app.use('/certificates', certificateRoutes);
 
 /** Middleware global de errores — debe ir al final */
 app.use(errorMiddleware);
