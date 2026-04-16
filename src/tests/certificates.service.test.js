@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import path from 'path';
 import CertificatesService from '../services/certificates.service.js';
 import CertificatesRepository from '../repositories/certificates.repository.js';
 
@@ -64,6 +65,38 @@ describe('CertificatesService', () => {
       await CertificatesService.generate('proj-1', fakeClient);
 
       expect(CertificatesService._generatePdf).toHaveBeenCalledWith(FAKE_ASSIGNMENT_DATA);
+    });
+  });
+
+  describe('getFilePath', () => {
+    const FAKE_CERT_WITH_STUDENT = {
+      id: 'cert-1',
+      assignment_id: 'assign-1',
+      student_id: 'student-1',
+      file_url: 'uploads/certificates/assign-1.pdf',
+      created_at: new Date(),
+    };
+
+    it('lanza HttpError 404 si el certificado no existe en BD', async () => {
+      CertificatesRepository.findById.mockResolvedValue(null);
+      await expect(
+        CertificatesService.getFilePath('cert-1', 'student-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    });
+
+    it('lanza HttpError 403 si el certificado no pertenece al estudiante', async () => {
+      CertificatesRepository.findById.mockResolvedValue(FAKE_CERT_WITH_STUDENT);
+      await expect(
+        CertificatesService.getFilePath('cert-1', 'otro-student'),
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('lanza HttpError 404 si el archivo PDF no existe en disco', async () => {
+      CertificatesRepository.findById.mockResolvedValue(FAKE_CERT_WITH_STUDENT);
+      // fs está mockeado — existsSync devuelve false por defecto en vi.mock('fs')
+      await expect(
+        CertificatesService.getFilePath('cert-1', 'student-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
     });
   });
 

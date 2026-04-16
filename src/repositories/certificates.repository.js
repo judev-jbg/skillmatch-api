@@ -20,6 +20,23 @@ const CertificatesRepository = {
     );
     return rows[0];
   },
+
+  /**
+   * Busca un certificado por ID.
+   * Incluye el student_id del assignment para verificar ownership.
+   * @param {string} id
+   * @returns {Promise<object|null>}
+   */
+  async findById(id) {
+    const { rows } = await pool.query(
+      `SELECT c.*, a.student_id
+       FROM certificates c
+       JOIN assignments a ON a.id = c.assignment_id
+       WHERE c.id = $1`,
+      [id],
+    );
+    return rows[0] ?? null;
+  },
 };
 
 export default CertificatesRepository;

@@ -139,6 +139,35 @@ const CertificatesService = {
       stream.on('error', reject);
     });
   },
+
+  /**
+   * Devuelve la ruta absoluta del PDF para que el controller lo sirva con res.sendFile().
+   * Verifica que el certificado existe y pertenece al estudiante autenticado.
+   *
+   * @param {string} id - UUID del certificado
+   * @param {string} studentId - UUID del estudiante autenticado
+   * @returns {Promise<string>} Ruta absoluta del archivo PDF
+   * @throws {HttpError} 404 si el certificado no existe en BD
+   * @throws {HttpError} 403 si el certificado no pertenece al estudiante
+   * @throws {HttpError} 404 si el archivo PDF no existe en disco
+   */
+  async getFilePath(id, studentId) {
+    const certificate = await CertificatesRepository.findById(id);
+    if (!certificate) {
+      throw new HttpError('Certificado no encontrado', 404);
+    }
+
+    if (certificate.student_id !== studentId) {
+      throw new HttpError('No tienes permiso para acceder a este certificado', 403);
+    }
+
+    const absolutePath = path.resolve(certificate.file_url);
+    if (!fs.existsSync(absolutePath)) {
+      throw new HttpError('El archivo del certificado no está disponible', 404);
+    }
+
+    return absolutePath;
+  },
 };
 
 export default CertificatesService;
