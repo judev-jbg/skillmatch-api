@@ -304,26 +304,31 @@ describe('ProjectsService', () => {
       expect(result.status).toBe('rejected');
     });
 
-    it('transiciona in_review -> completed generando certificado en transaccion', async () => {
+    it('CA6 — transiciona in_review -> completed: setEndDate, certificado y estado en transaccion', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       const completed = { ...FAKE_PROJECT, status: 'completed' };
+      const fakeAssignment = { id: 'assign-1', student_id: 'student-1' };
       ProjectsRepository.findById.mockResolvedValue(inReview);
-      ProjectsRepository.updateStatus.mockResolvedValue(completed);
+      AssignmentsRepository.findByProject.mockResolvedValue(fakeAssignment);
+      AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockResolvedValue({ id: 'cert-1' });
+      ProjectsRepository.updateStatus.mockResolvedValue(completed);
 
       const result = await ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1');
 
       expect(fakeClient.query).toHaveBeenCalledWith('BEGIN');
-      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed', fakeClient);
+      expect(AssignmentsRepository.setEndDate).toHaveBeenCalledWith('assign-1', fakeClient);
       expect(CertificatesService.generate).toHaveBeenCalledWith('proj-1', fakeClient);
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed', fakeClient);
       expect(fakeClient.query).toHaveBeenCalledWith('COMMIT');
       expect(result).toEqual(completed);
     });
 
-    it('hace ROLLBACK si falla la generacion del certificado al completar', async () => {
+    it('CA7 — hace ROLLBACK si falla la generacion del certificado al completar', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       ProjectsRepository.findById.mockResolvedValue(inReview);
-      ProjectsRepository.updateStatus.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
+      AssignmentsRepository.findByProject.mockResolvedValue({ id: 'assign-1' });
+      AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockRejectedValue(new Error('PDF error'));
 
       await expect(
