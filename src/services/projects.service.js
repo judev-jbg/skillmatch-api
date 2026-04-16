@@ -1,6 +1,7 @@
 import pool from '../config/db.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
 import AssignmentsRepository from '../repositories/assignments.repository.js';
+import CertificatesService from './certificates.service.js';
 import { HttpError } from '../utils/errors.js';
 
 const VALID_STATUSES = ['pending', 'assigned', 'in_progress', 'in_review', 'rejected', 'completed', 'cancelled'];
@@ -231,6 +232,23 @@ const ProjectsService = {
         `Transición no permitida: ${project.status} → ${newStatus}. Permitidas: ${allowed.join(', ') || 'ninguna'}`,
         400,
       );
+    }
+
+    // Si el destino es 'completed', abrir transacción para actualizar estado y generar certificado
+    if (newStatus === 'completed') {
+      const txClient = await pool.connect();
+      try {
+        await txClient.query('BEGIN');
+        const updated = await ProjectsRepository.updateStatus(id, newStatus, txClient);
+        await CertificatesService.generate(id, txClient);
+        await txClient.query('COMMIT');
+        return updated;
+      } catch (err) {
+        await txClient.query('ROLLBACK');
+        throw err;
+      } finally {
+        txClient.release();
+      }
     }
 
     return ProjectsRepository.updateStatus(id, newStatus, client);

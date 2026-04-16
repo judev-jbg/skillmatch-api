@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProjectsService from '../services/projects.service.js';
 import ProjectsRepository from '../repositories/projects.repository.js';
 import AssignmentsRepository from '../repositories/assignments.repository.js';
+import CertificatesService from '../services/certificates.service.js';
 import pool from '../config/db.js';
 
 vi.mock('../repositories/projects.repository.js');
 vi.mock('../repositories/assignments.repository.js');
+vi.mock('../services/certificates.service.js');
 vi.mock('../config/db.js', () => ({
   default: { connect: vi.fn() },
 }));
@@ -300,6 +302,36 @@ describe('ProjectsService', () => {
       const result = await ProjectsService.transitionStatus('proj-1', 'rejected', 'ngo-1');
 
       expect(result.status).toBe('rejected');
+    });
+
+    it('transiciona in_review -> completed generando certificado en transaccion', async () => {
+      const inReview = { ...FAKE_PROJECT, status: 'in_review' };
+      const completed = { ...FAKE_PROJECT, status: 'completed' };
+      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.updateStatus.mockResolvedValue(completed);
+      CertificatesService.generate.mockResolvedValue({ id: 'cert-1' });
+
+      const result = await ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1');
+
+      expect(fakeClient.query).toHaveBeenCalledWith('BEGIN');
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed', fakeClient);
+      expect(CertificatesService.generate).toHaveBeenCalledWith('proj-1', fakeClient);
+      expect(fakeClient.query).toHaveBeenCalledWith('COMMIT');
+      expect(result).toEqual(completed);
+    });
+
+    it('hace ROLLBACK si falla la generacion del certificado al completar', async () => {
+      const inReview = { ...FAKE_PROJECT, status: 'in_review' };
+      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.updateStatus.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
+      CertificatesService.generate.mockRejectedValue(new Error('PDF error'));
+
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1'),
+      ).rejects.toThrow('PDF error');
+
+      expect(fakeClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(fakeClient.release).toHaveBeenCalled();
     });
   });
 
