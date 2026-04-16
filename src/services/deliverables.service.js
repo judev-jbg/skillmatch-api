@@ -162,7 +162,7 @@ const DeliverablesService = {
 
   /**
    * La ONG aprueba o rechaza un entregable.
-   * - Si aprueba: entregable → approved. Si todos están approved → proyecto a completed. Si no → proyecto a in_progress.
+   * - Si aprueba: entregable → approved. Si todos están approved → proyecto a in_review (ONG debe cerrar manualmente). Si no → proyecto permanece en in_review.
    * - Si rechaza: entregable → rejected, proyecto → rejected.
    *
    * @param {string} deliverableId
@@ -206,13 +206,10 @@ const DeliverablesService = {
       const allApproved = all.every(d => d.status === 'approved');
 
       if (allApproved) {
-        // Todos aprobados → proyecto completado, cerrar assignment
-        await ProjectsRepository.updateStatus(assignment.project_id, 'completed');
-        await AssignmentsRepository.setEndDate(assignment.id);
-      } else {
-        // Quedan más → proyecto vuelve a in_progress
-        await ProjectsRepository.updateStatus(assignment.project_id, 'in_progress');
+        // Todos aprobados → proyecto pasa a in_review, la ONG debe cerrar manualmente
+        await ProjectsRepository.updateStatus(assignment.project_id, 'in_review');
       }
+      // Si quedan entregables pendientes, el proyecto ya está en in_review (no se toca)
     }
 
     return updated;

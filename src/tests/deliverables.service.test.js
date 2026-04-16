@@ -290,7 +290,7 @@ describe('DeliverablesService', () => {
       expect(result.status).toBe('rejected');
     });
 
-    it('aprueba el entregable y pasa proyecto a in_progress si quedan mas', async () => {
+    it('CA5 — aprueba el entregable y el proyecto permanece en in_review si quedan mas', async () => {
       const inReview = { ...FAKE_DELIVERABLE, status: 'in_review' };
       const approved = { ...FAKE_DELIVERABLE, status: 'approved' };
       DeliverablesRepository.findById.mockResolvedValue(inReview);
@@ -302,15 +302,14 @@ describe('DeliverablesService', () => {
         approved,
         { ...FAKE_DELIVERABLE, id: 'del-2', status: 'pending' },
       ]);
-      ProjectsRepository.updateStatus.mockResolvedValue();
 
       const result = await DeliverablesService.review('del-1', 'ngo-1', { status: 'approved' });
 
-      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'in_progress');
+      expect(ProjectsRepository.updateStatus).not.toHaveBeenCalled();
       expect(result.status).toBe('approved');
     });
 
-    it('aprueba el ultimo entregable y pasa proyecto a completed', async () => {
+    it('CA4 — aprueba el ultimo entregable y pasa proyecto a in_review (no completed)', async () => {
       const inReview = { ...FAKE_DELIVERABLE, status: 'in_review' };
       const approved = { ...FAKE_DELIVERABLE, status: 'approved' };
       DeliverablesRepository.findById.mockResolvedValue(inReview);
@@ -320,12 +319,11 @@ describe('DeliverablesService', () => {
       // Todos aprobados
       DeliverablesRepository.findByAssignment.mockResolvedValue([approved]);
       ProjectsRepository.updateStatus.mockResolvedValue();
-      AssignmentsRepository.setEndDate.mockResolvedValue();
 
       const result = await DeliverablesService.review('del-1', 'ngo-1', { status: 'approved' });
 
-      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed');
-      expect(AssignmentsRepository.setEndDate).toHaveBeenCalledWith('assign-1');
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'in_review');
+      expect(AssignmentsRepository.setEndDate).not.toHaveBeenCalled();
       expect(result.status).toBe('approved');
     });
   });

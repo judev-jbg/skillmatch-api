@@ -234,13 +234,17 @@ const ProjectsService = {
       );
     }
 
-    // Si el destino es 'completed', abrir transacción para actualizar estado y generar certificado
+    // Si el destino es 'completed', cerrar assignment, generar certificado y actualizar estado en transacción
     if (newStatus === 'completed') {
+      const assignment = await AssignmentsRepository.findByProject(id);
       const txClient = await pool.connect();
       try {
         await txClient.query('BEGIN');
-        const updated = await ProjectsRepository.updateStatus(id, newStatus, txClient);
+        if (assignment) {
+          await AssignmentsRepository.setEndDate(assignment.id, txClient);
+        }
         await CertificatesService.generate(id, txClient);
+        const updated = await ProjectsRepository.updateStatus(id, newStatus, txClient);
         await txClient.query('COMMIT');
         return updated;
       } catch (err) {
