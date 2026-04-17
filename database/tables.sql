@@ -167,6 +167,17 @@ CREATE TABLE certificates (
 );
 
 -- ============================
+-- PASSWORD RESET TOKENS TABLE (SMAPI-5)
+-- ============================
+CREATE TABLE password_reset_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(64) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================
 -- INDEXES (SMAPI-32)
 -- ============================
 CREATE INDEX idx_applications_project ON applications(project_id);

@@ -90,6 +90,42 @@ const AuthController = {
     });
     return res.status(200).json({ message: 'Sesión cerrada correctamente' });
   },
+
+  /**
+   * POST /auth/forgot-password
+   * Solicita recuperación de contraseña por email.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async forgotPassword(req, res) {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'El campo email es requerido' });
+    }
+
+    await AuthService.forgotPassword(email);
+    return res.status(200).json({ message: 'Si el email está registrado, recibirás instrucciones para recuperar tu contraseña' });
+  },
+
+  /**
+   * POST /auth/reset-password
+   * Establece una nueva contraseña usando el token de recuperación.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async resetPassword(req, res) {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: 'Los campos token y password son requeridos' });
+    }
+
+    await AuthService.resetPassword({ token, password });
+    return res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  },
 };
 
 export default AuthController;
