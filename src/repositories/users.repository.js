@@ -76,6 +76,19 @@ const UsersRepository = {
   },
 
   /**
+   * Actualiza el password_hash del usuario.
+   * @param {string} userId
+   * @param {string} passwordHash
+   * @returns {Promise<void>}
+   */
+  async updatePassword(userId, passwordHash) {
+    await pool.query(
+      `UPDATE users SET password_hash = $2 WHERE id = $1`,
+      [userId, passwordHash],
+    );
+  },
+
+  /**
    * Actualiza name y/o email del usuario.
    * @param {{ userId: string, name?: string, email?: string }} data
    * @param {import('pg').PoolClient} client - Cliente de transacción activa

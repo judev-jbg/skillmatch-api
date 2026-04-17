@@ -11,6 +11,11 @@ vi.mock('../config/db.js', () => ({
 vi.mock('argon2', () => ({
   default: { hash: vi.fn().mockResolvedValue('hashed_password') },
 }));
+vi.mock('resend', () => ({
+  Resend: vi.fn(function () {
+    this.emails = { send: vi.fn().mockResolvedValue({ id: 'email-1' }) };
+  }),
+}));
 
 describe('AuthService.register', () => {
   /** @type {{ query: import('vitest').MockInstance, release: import('vitest').MockInstance }} */

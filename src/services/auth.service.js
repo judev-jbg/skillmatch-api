@@ -1,8 +1,12 @@
+import crypto from 'crypto';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
+import { Resend } from 'resend';
 import pool from '../config/db.js';
 import UsersRepository from '../repositories/users.repository.js';
+import PasswordResetRepository from '../repositories/password-reset.repository.js';
 import { HttpError } from '../utils/errors.js';
+
 
 /**
  * Lógica de negocio para autenticación.
@@ -89,6 +93,56 @@ const AuthService = {
 
     const { password_hash, ...publicUser } = user;
     return { token, user: publicUser };
+  },
+
+  /**
+   * Genera un token de recuperación y envía el email al usuario.
+   * Siempre devuelve 200 aunque el email no exista (no revelar si está registrado).
+   *
+   * @param {string} email
+   * @returns {Promise<void>}
+   */
+  async forgotPassword(email) {
+    const user = await UsersRepository.findByEmail(email);
+    if (!user) return;
+
+    await PasswordResetRepository.deleteByUserId(user.id);
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await PasswordResetRepository.create({ userId: user.id, token, expiresAt });
+
+    await new Resend(process.env.RESEND_API_KEY).emails.send({
+      from: process.env.RESEND_FROM,
+      to: user.email,
+      subject: 'Recuperación de contraseña — SkillMatch',
+      html: `
+        <p>Hola ${user.name},</p>
+        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+        <p>Tu token de recuperación es:</p>
+        <pre>${token}</pre>
+        <p>Este token expira en 1 hora. Si no solicitaste este cambio, ignora este mensaje.</p>
+      `,
+    });
+  },
+
+  /**
+   * Verifica el token y actualiza la contraseña del usuario.
+   *
+   * @param {{ token: string, password: string }} data
+   * @returns {Promise<void>}
+   * @throws {HttpError} 400 si el token no existe o ha expirado
+   */
+  async resetPassword({ token, password }) {
+    const record = await PasswordResetRepository.findByToken(token);
+    if (!record) {
+      throw new HttpError('Token inválido o expirado', 400);
+    }
+
+    const passwordHash = await argon2.hash(password);
+    await UsersRepository.updatePassword(record.user_id, passwordHash);
+    await PasswordResetRepository.deleteByUserId(record.user_id);
   },
 };
 

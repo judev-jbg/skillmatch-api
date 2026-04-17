@@ -182,4 +182,107 @@ router.post('/login', AuthController.login);
  */
 router.post('/logout', verifyToken, AuthController.logout);
 
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Solicitar recuperación de contraseña
+ *     description: >
+ *       Envía un email con un token de recuperación si el email está registrado.
+ *       Siempre devuelve 200 para no revelar si el email existe en el sistema.
+ *       El token expira en 1 hora.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: ana@ong.org
+ *     responses:
+ *       200:
+ *         description: Solicitud procesada (independientemente de si el email existe)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Si el email está registrado, recibirás instrucciones para recuperar tu contraseña
+ *       400:
+ *         description: Campo email faltante
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/forgot-password', AuthController.forgotPassword);
+
+/**
+ * @openapi
+ * /auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Restablecer contraseña
+ *     description: >
+ *       Establece una nueva contraseña usando el token recibido por email.
+ *       El token se invalida tras su uso.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: a3f9c2d1e8b7...
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: NuevaC0ntraseña!
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña actualizada correctamente
+ *       400:
+ *         description: Campos faltantes o token inválido/expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/reset-password', AuthController.resetPassword);
+
 export default router;

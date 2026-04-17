@@ -5,6 +5,11 @@ import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 
 vi.mock('../repositories/users.repository.js');
+vi.mock('resend', () => ({
+  Resend: vi.fn(function () {
+    this.emails = { send: vi.fn().mockResolvedValue({ id: 'email-1' }) };
+  }),
+}));
 vi.mock('argon2', () => ({
   default: {
     hash: vi.fn().mockResolvedValue('hashed_password'),
