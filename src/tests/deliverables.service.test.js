@@ -71,6 +71,45 @@ describe('DeliverablesService', () => {
     });
   });
 
+  // ── getById ─────────────────────────────────────────────────────────────────
+
+  describe('CA1/CA2 — getById — acceso ONG y estudiante', () => {
+    it('CA1 — devuelve el entregable si es la ONG propietaria', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(FAKE_DELIVERABLE);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+
+      const result = await DeliverablesService.getById('del-1', 'ngo-1');
+      expect(result).toEqual(FAKE_DELIVERABLE);
+    });
+
+    it('CA2 — devuelve el entregable si es el estudiante asignado', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(FAKE_DELIVERABLE);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+
+      const result = await DeliverablesService.getById('del-1', 'student-1');
+      expect(result).toEqual(FAKE_DELIVERABLE);
+    });
+  });
+
+  describe('CA3 — getById — entregable no encontrado', () => {
+    it('CA3 — lanza HttpError 404 si el entregable no existe', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(null);
+      await expect(DeliverablesService.getById('bad-id', 'ngo-1')).rejects.toMatchObject({ statusCode: 404 });
+    });
+  });
+
+  describe('CA4 — getById — usuario sin permiso', () => {
+    it('CA4 — lanza HttpError 403 si el usuario no es ONG ni estudiante asignado', async () => {
+      DeliverablesRepository.findById.mockResolvedValue(FAKE_DELIVERABLE);
+      AssignmentsRepository.findById.mockResolvedValue(FAKE_ASSIGNMENT);
+      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+
+      await expect(DeliverablesService.getById('del-1', 'extraño')).rejects.toMatchObject({ statusCode: 403 });
+    });
+  });
+
   // ── getByAssignment ─────────────────────────────────────────────────────────
 
   describe('getByAssignment', () => {

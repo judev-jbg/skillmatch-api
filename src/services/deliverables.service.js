@@ -71,6 +71,35 @@ const DeliverablesService = {
   },
 
   /**
+   * Devuelve el detalle de un entregable por su ID.
+   * Solo la ONG propietaria del proyecto o el estudiante asignado pueden ver.
+   *
+   * @param {string} deliverableId
+   * @param {string} userId - UUID del usuario autenticado
+   * @returns {Promise<object>} Entregable
+   * @throws {HttpError} 404 si el entregable no existe
+   * @throws {HttpError} 403 si no tiene permiso
+   */
+  async getById(deliverableId, userId) {
+    const deliverable = await DeliverablesRepository.findById(deliverableId);
+    if (!deliverable) {
+      throw new HttpError('Entregable no encontrado', 404);
+    }
+
+    const assignment = await AssignmentsRepository.findById(deliverable.assignment_id);
+    const project = await ProjectsRepository.findById(assignment.project_id);
+
+    const isNgo = project && project.ngo_id === userId;
+    const isStudent = assignment.student_id === userId;
+
+    if (!isNgo && !isStudent) {
+      throw new HttpError('No tienes permiso para ver este entregable', 403);
+    }
+
+    return deliverable;
+  },
+
+  /**
    * El estudiante empieza a trabajar en un entregable.
    * Transiciona de 'pending' o 'rejected' a 'in_progress'.
    * Solo un entregable activo a la vez por assignment.

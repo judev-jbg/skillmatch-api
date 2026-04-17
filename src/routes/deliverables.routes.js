@@ -121,6 +121,51 @@ router.get('/', verifyToken, DeliverablesController.getByAssignment);
 
 /**
  * @openapi
+ * /deliverables/{id}:
+ *   get:
+ *     tags:
+ *       - Deliverables
+ *     summary: Obtener detalle de un entregable
+ *     description: Accesible por la ONG propietaria del proyecto o el estudiante asignado.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Detalle del entregable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Deliverable'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: No tienes permiso para ver este entregable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Entregable no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/:id', verifyToken, DeliverablesController.getById);
+
+/**
+ * @openapi
  * /deliverables/{id}/start:
  *   put:
  *     tags:

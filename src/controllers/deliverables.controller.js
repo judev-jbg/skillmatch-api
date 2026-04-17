@@ -35,6 +35,18 @@ const DeliverablesController = {
   },
 
   /**
+   * GET /deliverables/:id
+   * Devuelve el detalle de un entregable por su ID.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async getById(req, res) {
+    const deliverable = await DeliverablesService.getById(req.params.id, req.user.id);
+    return res.status(200).json(deliverable);
+  },
+
+  /**
    * PUT /deliverables/:id/start
    * El estudiante empieza a trabajar en un entregable.
    *

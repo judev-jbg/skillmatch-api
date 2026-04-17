@@ -42,6 +42,23 @@ describe('DeliverablesController', () => {
     });
   });
 
+  describe('getById', () => {
+    it('responde 200 con el entregable', async () => {
+      DeliverablesService.getById.mockResolvedValue(FAKE_DELIVERABLE);
+      const res = mockRes();
+      await DeliverablesController.getById(mockReq({ params: { id: 'del-1' } }), res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(FAKE_DELIVERABLE);
+    });
+
+    it('delega id y userId correctamente al service', async () => {
+      DeliverablesService.getById.mockResolvedValue(FAKE_DELIVERABLE);
+      const res = mockRes();
+      await DeliverablesController.getById(mockReq({ params: { id: 'del-1' }, user: { id: 'ngo-1', role: 'ngo' } }), res);
+      expect(DeliverablesService.getById).toHaveBeenCalledWith('del-1', 'ngo-1');
+    });
+  });
+
   describe('getByAssignment', () => {
     it('responde 200 con lista de entregables', async () => {
       DeliverablesService.getByAssignment.mockResolvedValue([FAKE_DELIVERABLE]);
