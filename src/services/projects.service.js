@@ -205,6 +205,9 @@ const ProjectsService = {
    * Cambia el estado de un proyecto validando la transición.
    * Reutilizable por otros services (assignments, deliverables).
    *
+   * Si se pasa `client`, la operación participa en la transacción del llamador
+   * (sin BEGIN/COMMIT/ROLLBACK propios). Si no se pasa, abre transacción interna.
+   *
    * @param {string} id - UUID del proyecto
    * @param {string} newStatus - Estado destino
    * @param {string} userId - UUID del usuario que hace la acción
@@ -215,17 +218,43 @@ const ProjectsService = {
    * @throws {HttpError} 400 si la transición no es válida
    */
   async transitionStatus(id, newStatus, userId, client) {
-    const project = await ProjectsRepository.findById(id);
+    if (client) {
+      return ProjectsService._doTransition(id, newStatus, userId, client);
+    }
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const result = await ProjectsService._doTransition(id, newStatus, userId, c);
+      await c.query('COMMIT');
+      return result;
+    } catch (err) {
+      await c.query('ROLLBACK');
+      throw err;
+    } finally {
+      c.release();
+    }
+  },
+
+  /**
+   * Lógica interna de transición de estado. Siempre dentro de una transacción activa.
+   * Usa SELECT FOR UPDATE para evitar race conditions entre requests concurrentes.
+   *
+   * @param {string} id
+   * @param {string} newStatus
+   * @param {string} userId
+   * @param {import('pg').PoolClient} client - Obligatorio
+   * @returns {Promise<object>} Proyecto actualizado
+   */
+  async _doTransition(id, newStatus, userId, client) {
+    const project = await ProjectsRepository.findByIdForUpdate(id, client);
     if (!project) {
       throw new HttpError('Proyecto no encontrado', 404);
     }
 
-    // Verificar que el usuario es la ONG propietaria
     if (project.ngo_id !== userId) {
       throw new HttpError('No tienes permiso para cambiar el estado de este proyecto', 403);
     }
 
-    // Validar que la transición es legal
     const allowed = VALID_TRANSITIONS[project.status];
     if (!allowed || !allowed.includes(newStatus)) {
       throw new HttpError(
@@ -234,25 +263,12 @@ const ProjectsService = {
       );
     }
 
-    // Si el destino es 'completed', cerrar assignment, generar certificado y actualizar estado en transacción
     if (newStatus === 'completed') {
       const assignment = await AssignmentsRepository.findByProject(id);
-      const txClient = await pool.connect();
-      try {
-        await txClient.query('BEGIN');
-        if (assignment) {
-          await AssignmentsRepository.setEndDate(assignment.id, txClient);
-        }
-        await CertificatesService.generate(id, txClient);
-        const updated = await ProjectsRepository.updateStatus(id, newStatus, txClient);
-        await txClient.query('COMMIT');
-        return updated;
-      } catch (err) {
-        await txClient.query('ROLLBACK');
-        throw err;
-      } finally {
-        txClient.release();
+      if (assignment) {
+        await AssignmentsRepository.setEndDate(assignment.id, client);
       }
+      await CertificatesService.generate(id, client);
     }
 
     return ProjectsRepository.updateStatus(id, newStatus, client);
