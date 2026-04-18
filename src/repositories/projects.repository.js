@@ -128,6 +128,23 @@ const ProjectsRepository = {
    * @param {import('pg').PoolClient} client
    * @returns {Promise<void>}
    */
+  /**
+   * Busca un proyecto por ID bloqueando la fila hasta el fin de la transacción.
+   * Usar solo dentro de una transacción activa (BEGIN ya ejecutado).
+   * Devuelve solo los campos necesarios para validar una transición de estado.
+   *
+   * @param {string} id
+   * @param {import('pg').PoolClient} client - Cliente de transacción activa (obligatorio)
+   * @returns {Promise<{ id: string, ngo_id: string, status: string }|null>}
+   */
+  async findByIdForUpdate(id, client) {
+    const { rows } = await client.query(
+      'SELECT id, ngo_id, status FROM projects WHERE id = $1 FOR UPDATE',
+      [id],
+    );
+    return rows[0] ?? null;
+  },
+
   async upsertSkills(projectId, skills, client) {
     await client.query('DELETE FROM project_skills WHERE project_id = $1', [projectId]);
 

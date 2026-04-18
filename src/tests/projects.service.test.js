@@ -237,35 +237,35 @@ describe('ProjectsService', () => {
 
   describe('transitionStatus', () => {
     it('lanza HttpError 404 si el proyecto no existe', async () => {
-      ProjectsRepository.findById.mockResolvedValue(null);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(null);
       await expect(
         ProjectsService.transitionStatus('bad-id', 'assigned', 'ngo-1'),
       ).rejects.toMatchObject({ statusCode: 404 });
     });
 
     it('lanza HttpError 403 si no es la ONG propietaria', async () => {
-      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(FAKE_PROJECT);
       await expect(
         ProjectsService.transitionStatus('proj-1', 'assigned', 'otra-ngo'),
       ).rejects.toMatchObject({ statusCode: 403 });
     });
 
     it('lanza HttpError 400 si la transicion no es valida', async () => {
-      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT); // status: pending
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(FAKE_PROJECT); // status: pending
       await expect(
         ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1'),
       ).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('lanza HttpError 400 si el proyecto esta en completed', async () => {
-      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue({ ...FAKE_PROJECT, status: 'completed' });
       await expect(
         ProjectsService.transitionStatus('proj-1', 'in_progress', 'ngo-1'),
       ).rejects.toMatchObject({ statusCode: 400 });
     });
 
     it('lanza HttpError 400 si el proyecto esta en cancelled', async () => {
-      ProjectsRepository.findById.mockResolvedValue({ ...FAKE_PROJECT, status: 'cancelled' });
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue({ ...FAKE_PROJECT, status: 'cancelled' });
       await expect(
         ProjectsService.transitionStatus('proj-1', 'pending', 'ngo-1'),
       ).rejects.toMatchObject({ statusCode: 400 });
@@ -273,30 +273,30 @@ describe('ProjectsService', () => {
 
     it('transiciona pending -> assigned correctamente', async () => {
       const updated = { ...FAKE_PROJECT, status: 'assigned' };
-      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT); // status: pending
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(FAKE_PROJECT);
       ProjectsRepository.updateStatus.mockResolvedValue(updated);
 
       const result = await ProjectsService.transitionStatus('proj-1', 'assigned', 'ngo-1');
 
-      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'assigned', undefined);
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'assigned', fakeClient);
       expect(result).toEqual(updated);
     });
 
     it('transiciona pending -> cancelled correctamente', async () => {
       const updated = { ...FAKE_PROJECT, status: 'cancelled' };
-      ProjectsRepository.findById.mockResolvedValue(FAKE_PROJECT);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(FAKE_PROJECT);
       ProjectsRepository.updateStatus.mockResolvedValue(updated);
 
       const result = await ProjectsService.transitionStatus('proj-1', 'cancelled', 'ngo-1');
 
-      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'cancelled', undefined);
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'cancelled', fakeClient);
       expect(result).toEqual(updated);
     });
 
     it('transiciona in_review -> rejected correctamente', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       const rejected = { ...FAKE_PROJECT, status: 'rejected' };
-      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
       ProjectsRepository.updateStatus.mockResolvedValue(rejected);
 
       const result = await ProjectsService.transitionStatus('proj-1', 'rejected', 'ngo-1');
@@ -304,11 +304,24 @@ describe('ProjectsService', () => {
       expect(result.status).toBe('rejected');
     });
 
+    it('usa el client externo si se pasa, sin abrir transaccion propia', async () => {
+      const updated = { ...FAKE_PROJECT, status: 'assigned' };
+      const externalClient = { query: vi.fn(), release: vi.fn() };
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(FAKE_PROJECT);
+      ProjectsRepository.updateStatus.mockResolvedValue(updated);
+
+      await ProjectsService.transitionStatus('proj-1', 'assigned', 'ngo-1', externalClient);
+
+      expect(pool.connect).not.toHaveBeenCalled();
+      expect(ProjectsRepository.findByIdForUpdate).toHaveBeenCalledWith('proj-1', externalClient);
+      expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'assigned', externalClient);
+    });
+
     it('CA6 — transiciona in_review -> completed: setEndDate, certificado y estado en transaccion', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       const completed = { ...FAKE_PROJECT, status: 'completed' };
       const fakeAssignment = { id: 'assign-1', student_id: 'student-1' };
-      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
       AssignmentsRepository.findByProject.mockResolvedValue(fakeAssignment);
       AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockResolvedValue({ id: 'cert-1' });
@@ -326,7 +339,7 @@ describe('ProjectsService', () => {
 
     it('CA7 — hace ROLLBACK si falla la generacion del certificado al completar', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
-      ProjectsRepository.findById.mockResolvedValue(inReview);
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
       AssignmentsRepository.findByProject.mockResolvedValue({ id: 'assign-1' });
       AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockRejectedValue(new Error('PDF error'));
