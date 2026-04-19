@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
-import pool from '../config/db.js';
 import CertificatesRepository from '../repositories/certificates.repository.js';
-import AssignmentsRepository from '../repositories/assignments.repository.js';
 import { HttpError } from '../utils/errors.js';
 
 const CERTIFICATES_DIR = path.resolve('uploads/certificates');
@@ -14,51 +12,21 @@ const CERTIFICATES_DIR = path.resolve('uploads/certificates');
 const CertificatesService = {
   /**
    * Genera el PDF del certificado y lo inserta en la tabla certificates.
-   * Debe llamarse dentro de una transacción activa.
+   * Debe llamarse dentro de una transacción activa, con los datos del assignment
+   * ya preparados (incluyendo end_date actualizada).
    *
-   * @param {string} projectId - UUID del proyecto completado
+   * @param {{ assignment_id: string, student_name: string, ngo_name: string, project_title: string, start_date: Date, end_date: Date }} assignmentData - Datos del assignment con todos los campos necesarios
    * @param {import('pg').PoolClient} client - Cliente de transacción activo
    * @returns {Promise<object>} Certificado creado
-   * @throws {HttpError} 404 si no se encuentra el assignment del proyecto
    */
-  async generate(projectId, client) {
-    // Obtener datos del assignment con estudiante, ONG y proyecto en una sola query
-    const { rows } = await (client ?? pool).query(
-      `SELECT
-         a.id            AS assignment_id,
-         a.start_date,
-         a.end_date,
-         u_student.name  AS student_name,
-         n.organization_name AS ngo_name,
-         p.title         AS project_title
-       FROM assignments a
-       JOIN users u_student    ON u_student.id = a.student_id
-       JOIN projects p         ON p.id = a.project_id
-       JOIN ngo_profile n      ON n.user_id = p.ngo_id
-       WHERE a.project_id = $1
-       ORDER BY a.start_date DESC
-       LIMIT 1`,
-      [projectId],
-    );
-
-    const data = rows[0];
-    if (!data) {
-      throw new HttpError('No se encontró el assignment del proyecto para generar el certificado', 404);
-    }
-
-    // Cerrar el assignment con la fecha de fin
-    await AssignmentsRepository.setEndDate(data.assignment_id, client);
-
-    // Actualizar end_date en los datos para incluirla en el PDF
-    data.end_date = new Date();
-
+  async generate(assignmentData, client) {
     // Crear directorio si no existe (CA5)
     if (!fs.existsSync(CERTIFICATES_DIR)) {
       fs.mkdirSync(CERTIFICATES_DIR, { recursive: true });
     }
 
-    const fileUrl = await CertificatesService._generatePdf(data);
-    return CertificatesRepository.create({ assignmentId: data.assignment_id, fileUrl }, client);
+    const fileUrl = await CertificatesService._generatePdf(assignmentData);
+    return CertificatesRepository.create({ assignmentId: assignmentData.assignment_id, fileUrl }, client);
   },
 
   /**
