@@ -43,16 +43,53 @@ DOCS_ENABLED=true
 ```bash
 # Crear la base de datos
 psql -U postgres -d postgres -c "CREATE DATABASE skillmatch;"
+```
 
-# Crear las tablas
+**Opción A — DB nueva desde cero (snapshot)**
+
+```bash
 psql -U postgres -d skillmatch -f database/tables.sql
+```
 
+**Opción B — DB nueva con historial de migraciones**
+
+```bash
+npm run migrate
+```
+
+**DB ya existente — aplicar cambios pendientes**
+
+```bash
+npm run migrate
+```
+
+Si tu DB ya fue creada con `tables.sql` y es la primera vez que usas migraciones, marca la migración inicial como aplicada sin ejecutarla:
+
+```bash
+npx node-pg-migrate -f database.json up --fake
+```
+
+```bash
 # Cargar datos de desarrollo (opcional)
 psql -U postgres -d skillmatch -f database/seed.sql
 ```
 
 El seed incluye: 1 admin, 2 ONGs, 2 estudiantes, 10 skills y 2 proyectos.
 Todos los usuarios usan la contraseña `Test1234`.
+
+### Añadir un cambio de schema
+
+1. Crear el archivo de migración:
+   ```bash
+   npm run migrate create nombre-del-cambio
+   ```
+2. Escribir el SQL en el archivo generado (`database/migrations/TIMESTAMP_nombre-del-cambio.sql`)
+3. Actualizar `database/tables.sql` para reflejar el nuevo estado del schema
+4. Aplicar la migración:
+   ```bash
+   npm run migrate
+   ```
+5. Hacer commit con ambos archivos: la migración nueva y `tables.sql` actualizado
 
 ## Scripts
 
@@ -62,6 +99,7 @@ Todos los usuarios usan la contraseña `Test1234`.
 | `npm start` | Servidor en modo produccion |
 | `npm test` | Ejecutar todos los tests |
 | `npm run test:watch` | Tests en modo watch |
+| `npm run migrate` | Aplicar migraciones de schema pendientes |
 
 ## Endpoints
 
@@ -97,6 +135,7 @@ src/
 └── tests/                # Tests unitarios (Vitest)
 
 database/
-├── tables.sql            # Schema de la base de datos
+├── migrations/           # Migraciones incrementales de schema
+├── tables.sql            # Snapshot autoritativo del schema
 └── seed.sql              # Datos de desarrollo
 ```
