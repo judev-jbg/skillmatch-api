@@ -72,6 +72,36 @@ const AssignmentsRepository = {
   },
 
   /**
+   * Busca el assignment activo de un proyecto con todos los datos
+   * necesarios para generar el certificado: nombre del estudiante,
+   * nombre de la ONG, título del proyecto, start_date y end_date.
+   * @param {string} projectId
+   * @param {import('pg').PoolClient} [client]
+   * @returns {Promise<object|null>}
+   */
+  async findByProjectWithDetails(projectId, client) {
+    const db = client ?? pool;
+    const { rows } = await db.query(
+      `SELECT
+         a.id            AS assignment_id,
+         a.start_date,
+         a.end_date,
+         u_student.name  AS student_name,
+         n.organization_name AS ngo_name,
+         p.title         AS project_title
+       FROM assignments a
+       JOIN users u_student    ON u_student.id = a.student_id
+       JOIN projects p         ON p.id = a.project_id
+       JOIN ngo_profile n      ON n.user_id = p.ngo_id
+       WHERE a.project_id = $1
+       ORDER BY a.start_date DESC
+       LIMIT 1`,
+      [projectId],
+    );
+    return rows[0] ?? null;
+  },
+
+  /**
    * Marca un assignment como finalizado.
    * @param {string} id
    * @param {import('pg').PoolClient} [client]

@@ -264,11 +264,13 @@ const ProjectsService = {
     }
 
     if (newStatus === 'completed') {
-      const assignment = await AssignmentsRepository.findByProject(id);
-      if (assignment) {
-        await AssignmentsRepository.setEndDate(assignment.id, client);
+      const assignmentData = await AssignmentsRepository.findByProjectWithDetails(id, client);
+      if (!assignmentData) {
+        throw new HttpError('No se encontró el assignment del proyecto para generar el certificado', 404);
       }
-      await CertificatesService.generate(id, client);
+      await AssignmentsRepository.setEndDate(assignmentData.assignment_id, client);
+      assignmentData.end_date = new Date();
+      await CertificatesService.generate(assignmentData, client);
     }
 
     return ProjectsRepository.updateStatus(id, newStatus, client);

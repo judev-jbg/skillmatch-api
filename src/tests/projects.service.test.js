@@ -320,9 +320,16 @@ describe('ProjectsService', () => {
     it('CA6 — transiciona in_review -> completed: setEndDate, certificado y estado en transaccion', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       const completed = { ...FAKE_PROJECT, status: 'completed' };
-      const fakeAssignment = { id: 'assign-1', student_id: 'student-1' };
+      const fakeAssignmentData = {
+        assignment_id: 'assign-1',
+        student_name: 'Ana García',
+        ngo_name: 'ONG Educación',
+        project_title: 'App voluntarios',
+        start_date: new Date('2025-01-01'),
+        end_date: null,
+      };
       ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
-      AssignmentsRepository.findByProject.mockResolvedValue(fakeAssignment);
+      AssignmentsRepository.findByProjectWithDetails.mockResolvedValue(fakeAssignmentData);
       AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockResolvedValue({ id: 'cert-1' });
       ProjectsRepository.updateStatus.mockResolvedValue(completed);
@@ -331,16 +338,39 @@ describe('ProjectsService', () => {
 
       expect(fakeClient.query).toHaveBeenCalledWith('BEGIN');
       expect(AssignmentsRepository.setEndDate).toHaveBeenCalledWith('assign-1', fakeClient);
-      expect(CertificatesService.generate).toHaveBeenCalledWith('proj-1', fakeClient);
+      expect(CertificatesService.generate).toHaveBeenCalledWith(
+        expect.objectContaining({ assignment_id: 'assign-1' }),
+        fakeClient,
+      );
       expect(ProjectsRepository.updateStatus).toHaveBeenCalledWith('proj-1', 'completed', fakeClient);
       expect(fakeClient.query).toHaveBeenCalledWith('COMMIT');
       expect(result).toEqual(completed);
     });
 
-    it('CA7 — hace ROLLBACK si falla la generacion del certificado al completar', async () => {
+    it('lanza HttpError 404 si no hay assignment al transicionar a completed', async () => {
       const inReview = { ...FAKE_PROJECT, status: 'in_review' };
       ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
-      AssignmentsRepository.findByProject.mockResolvedValue({ id: 'assign-1' });
+      AssignmentsRepository.findByProjectWithDetails.mockResolvedValue(null);
+
+      await expect(
+        ProjectsService.transitionStatus('proj-1', 'completed', 'ngo-1'),
+      ).rejects.toMatchObject({ statusCode: 404 });
+
+      expect(fakeClient.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('CA7 — hace ROLLBACK si falla la generacion del certificado al completar', async () => {
+      const inReview = { ...FAKE_PROJECT, status: 'in_review' };
+      const fakeAssignmentData = {
+        assignment_id: 'assign-1',
+        student_name: 'Ana García',
+        ngo_name: 'ONG Educación',
+        project_title: 'App voluntarios',
+        start_date: new Date('2025-01-01'),
+        end_date: null,
+      };
+      ProjectsRepository.findByIdForUpdate.mockResolvedValue(inReview);
+      AssignmentsRepository.findByProjectWithDetails.mockResolvedValue(fakeAssignmentData);
       AssignmentsRepository.setEndDate.mockResolvedValue();
       CertificatesService.generate.mockRejectedValue(new Error('PDF error'));
 

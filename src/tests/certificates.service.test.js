@@ -4,9 +4,6 @@ import CertificatesService from '../services/certificates.service.js';
 import CertificatesRepository from '../repositories/certificates.repository.js';
 
 vi.mock('../repositories/certificates.repository.js');
-vi.mock('../config/db.js', () => ({
-  default: { connect: vi.fn(), query: vi.fn() },
-}));
 vi.mock('fs');
 vi.mock('pdfkit');
 
@@ -32,7 +29,7 @@ describe('CertificatesService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fakeClient = {
-      query: vi.fn().mockResolvedValue({ rows: [FAKE_ASSIGNMENT_DATA] }),
+      query: vi.fn().mockResolvedValue({}),
       release: vi.fn(),
     };
     // Mock de _generatePdf para aislar la lógica de negocio del I/O de archivos
@@ -40,17 +37,10 @@ describe('CertificatesService', () => {
   });
 
   describe('CA1 / CA3 — generate', () => {
-    it('lanza HttpError 404 si no existe assignment para el proyecto', async () => {
-      fakeClient.query.mockResolvedValue({ rows: [] });
-      await expect(
-        CertificatesService.generate('proj-1', fakeClient),
-      ).rejects.toMatchObject({ statusCode: 404 });
-    });
-
     it('crea el certificado en BD con el file_url correcto', async () => {
       CertificatesRepository.create.mockResolvedValue(FAKE_CERTIFICATE);
 
-      const result = await CertificatesService.generate('proj-1', fakeClient);
+      const result = await CertificatesService.generate(FAKE_ASSIGNMENT_DATA, fakeClient);
 
       expect(CertificatesRepository.create).toHaveBeenCalledWith(
         { assignmentId: 'assign-1', fileUrl: 'uploads/certificates/assign-1.pdf' },
@@ -62,7 +52,7 @@ describe('CertificatesService', () => {
     it('llama a _generatePdf con los datos del assignment', async () => {
       CertificatesRepository.create.mockResolvedValue(FAKE_CERTIFICATE);
 
-      await CertificatesService.generate('proj-1', fakeClient);
+      await CertificatesService.generate(FAKE_ASSIGNMENT_DATA, fakeClient);
 
       expect(CertificatesService._generatePdf).toHaveBeenCalledWith(FAKE_ASSIGNMENT_DATA);
     });
@@ -108,7 +98,7 @@ describe('CertificatesService', () => {
       // en que el directorio existe o se crea correctamente).
       CertificatesRepository.create.mockResolvedValue(FAKE_CERTIFICATE);
 
-      const result = await CertificatesService.generate('proj-1', fakeClient);
+      const result = await CertificatesService.generate(FAKE_ASSIGNMENT_DATA, fakeClient);
 
       expect(result).toEqual(FAKE_CERTIFICATE);
     });
