@@ -45,9 +45,11 @@ const AssignmentsRepository = {
    */
   async findById(id) {
     const { rows } = await pool.query(
-      `SELECT a.*, u.name AS student_name, u.email AS student_email
+      `SELECT a.*, u.name AS student_name, u.email AS student_email,
+              c.id AS certificate_id
        FROM assignments a
        JOIN users u ON u.id = a.student_id
+       LEFT JOIN certificates c ON c.assignment_id = a.id
        WHERE a.id = $1`,
       [id],
     );
@@ -61,9 +63,11 @@ const AssignmentsRepository = {
    */
   async findByStudent(studentId) {
     const { rows } = await pool.query(
-      `SELECT a.*, p.title AS project_title, p.status AS project_status
+      `SELECT a.*, p.title AS project_title, p.status AS project_status,
+              c.id AS certificate_id
        FROM assignments a
        JOIN projects p ON p.id = a.project_id
+       LEFT JOIN certificates c ON c.assignment_id = a.id
        WHERE a.student_id = $1
        ORDER BY a.created_at DESC`,
       [studentId],
