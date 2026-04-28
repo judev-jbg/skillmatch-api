@@ -49,6 +49,20 @@ const NgosRepository = {
     );
   },
   /**
+   * Devuelve todas las ONGs con su estado de verificación.
+   * @returns {Promise<object[]>}
+   */
+  async findAll() {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.name, u.email, np.organization_name, np.area, np.verified
+       FROM users u
+       JOIN ngo_profile np ON np.user_id = u.id
+       ORDER BY np.verified ASC, u.created_at DESC`,
+    );
+    return rows;
+  },
+
+  /**
    * Marca una ONG como verificada.
    * @param {string} userId
    * @returns {Promise<object|null>} Perfil actualizado o null si no existe

@@ -209,4 +209,38 @@ router.delete('/skills/:id', verifyToken, requireRole('admin'), SkillsController
  */
 router.put('/verify-ngo/:user_id', verifyToken, requireRole('admin'), AdminController.verifyNgo);
 
+/**
+ * @openapi
+ * /admin/ngos:
+ *   get:
+ *     tags:
+ *       - Admin - NGOs
+ *     summary: Listar todas las ONGs con estado de verificación
+ *     description: Solo accesible para administradores.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de ONGs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/NgoProfile'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acceso denegado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/ngos', verifyToken, requireRole('admin'), AdminController.listNgos);
+
 export default router;

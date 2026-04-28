@@ -59,6 +59,15 @@ const NgosService = {
     return NgosRepository.findByUserId(userId);
   },
   /**
+   * Devuelve todas las ONGs (solo admin).
+   *
+   * @returns {Promise<object[]>}
+   */
+  async getAll() {
+    return NgosRepository.findAll();
+  },
+
+  /**
    * Verifica una ONG (solo admin).
    *
    * @param {string} userId - UUID del usuario ONG a verificar
